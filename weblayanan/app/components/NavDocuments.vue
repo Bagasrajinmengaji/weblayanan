@@ -3,6 +3,7 @@ import type { Component } from "vue"
 
 import {
   IconDots,
+  IconFileText,
   IconFolder,
   IconShare3,
   IconTrash,
@@ -81,10 +82,45 @@ const { isMobile } = useSidebar()
         </DropdownMenu>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton class="text-sidebar-foreground/70">
-          <IconDots class="text-sidebar-foreground/70" />
-          <span>Lainnya</span>
-        </SidebarMenuButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <SidebarMenuButton class="text-sidebar-foreground/70 hover:text-sidebar-foreground cursor-pointer">
+              <IconDots class="text-sidebar-foreground/70" />
+              <span>Lainnya</span>
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            class="w-56 rounded-lg"
+            :side="isMobile ? 'bottom' : 'right'"
+            :align="isMobile ? 'end' : 'start'"
+          >
+            <DropdownMenuItem as-child>
+              <NuxtLink to="/pengajuan?layanan_id=4" class="cursor-pointer flex items-center">
+                <IconFileText class="mr-2 h-4 w-4 text-primary" />
+                <span>Surat Bebas Pustaka</span>
+              </NuxtLink>
+            </DropdownMenuItem>
+            <DropdownMenuItem as-child>
+              <NuxtLink to="/pengajuan?layanan_id=5" class="cursor-pointer flex items-center">
+                <IconFileText class="mr-2 h-4 w-4 text-primary" />
+                <span>Pengajuan Cuti Akademik</span>
+              </NuxtLink>
+            </DropdownMenuItem>
+            <DropdownMenuItem as-child>
+              <NuxtLink to="/pengajuan?layanan_id=6" class="cursor-pointer flex items-center">
+                <IconFileText class="mr-2 h-4 w-4 text-primary" />
+                <span>Rekomendasi Beasiswa</span>
+              </NuxtLink>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem as-child>
+              <NuxtLink to="/" class="cursor-pointer flex items-center font-medium text-primary">
+                <IconFolder class="mr-2 h-4 w-4" />
+                <span>Lihat Semua Layanan</span>
+              </NuxtLink>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
   </SidebarGroup>

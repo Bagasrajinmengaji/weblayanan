@@ -48,29 +48,29 @@ const data = {
   navSecondary: [
     {
       title: "Pengaturan",
-      url: "#",
+      url: "/pengaturan",
       icon: IconSettings,
     },
     {
       title: "Bantuan & FAQ",
-      url: "#",
+      url: "/bantuan",
       icon: IconHelp,
     },
   ],
   documents: [
     {
       name: "Surat Aktif Kuliah",
-      url: "/layanan/1",
+      url: "/pengajuan?layanan_id=1",
       icon: IconFileText,
     },
     {
       name: "Pengantar Penelitian",
-      url: "/layanan/2",
+      url: "/pengajuan?layanan_id=2",
       icon: IconFileText,
     },
     {
       name: "Legalisir Ijazah",
-      url: "/layanan/3",
+      url: "/pengajuan?layanan_id=3",
       icon: IconFileText,
     },
   ],
@@ -84,7 +84,7 @@ const data = {
         <SidebarMenuItem>
           <SidebarMenuButton
             as-child
-            class="data-[slot=sidebar-menu-button]:!p-1.5"
+            class="data-[slot=sidebar-menu-button]:p-1.5!"
           >
             <NuxtLink to="/">
               <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">

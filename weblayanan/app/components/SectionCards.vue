@@ -15,16 +15,30 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
+
+export interface StatsData {
+  layanan_tersedia?: number
+  sedang_diproses?: number
+  perlu_perbaikan?: number
+  selesai_terbit?: number
+  pending?: number
+  ditolak?: number
+  total_pengajuan?: number
+}
+
+const props = defineProps<{
+  stats?: StatsData
+}>()
 </script>
 
 <template>
-  <div class="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+  <div class="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
     <!-- Card 1: Total Jenis Layanan -->
     <Card class="@container/card">
       <CardHeader>
-        <CardDescription>LayananTersedia</CardDescription>
+        <CardDescription>Layanan Tersedia</CardDescription>
         <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          6 Layanan
+          {{ stats?.layanan_tersedia ?? 6 }} Layanan
         </CardTitle>
         <CardAction>
           <Badge variant="outline" class="text-primary">
@@ -48,7 +62,7 @@ import {
       <CardHeader>
         <CardDescription>Sedang Diproses</CardDescription>
         <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          12 Pengajuan
+          {{ stats?.sedang_diproses ?? 0 }} Pengajuan
         </CardTitle>
         <CardAction>
           <Badge variant="outline" class="text-amber-500 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
@@ -72,7 +86,7 @@ import {
       <CardHeader>
         <CardDescription>Perlu Perbaikan</CardDescription>
         <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          3 Surat
+          {{ stats?.perlu_perbaikan ?? 0 }} Berkas
         </CardTitle>
         <CardAction>
           <Badge variant="outline" class="text-destructive border-destructive/20 bg-destructive/5">
@@ -96,7 +110,7 @@ import {
       <CardHeader>
         <CardDescription>Selesai Terbit</CardDescription>
         <CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          128 Surat
+          {{ stats?.selesai_terbit ?? 0 }} Berkas
         </CardTitle>
         <CardAction>
           <Badge variant="outline" class="text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">

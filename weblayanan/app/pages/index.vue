@@ -1,61 +1,114 @@
+<script setup lang="ts">
+import {
+  IconAlertCircle,
+  IconClock,
+  IconPlus,
+  IconRefresh,
+  IconSearch,
+} from "@tabler/icons-vue"
+
+import DataTable from "~/components/DataTable.vue"
+import SectionCards from "~/components/SectionCards.vue"
+import { Button } from "~/components/ui/button"
+
+useSeoMeta({
+  title: "Dashboard Layanan Mahasiswa - Portal Akademik",
+  description: "Daftar layanan administrasi persuratan dan pengajuan berkas akademik mahasiswa secara online.",
+})
+
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || "http://localhost:8000/api"
+
+// Ambil data layanan dari Laravel API: GET /api/layanan
+const {
+  data: layananResponse,
+  pending: loadingLayanan,
+  error: errorLayanan,
+  refresh: refreshLayanan,
+} = await useFetch<any>(`${apiBase}/layanan`)
+
+// Ambil data statistik dari Laravel API: GET /api/pengajuan/stats
+const {
+  data: statsResponse,
+  refresh: refreshStats,
+} = await useFetch<any>(`${apiBase}/pengajuan/stats`, {
+  default: () => ({ data: {} }),
+})
+
+const layananList = computed(() => {
+  return layananResponse.value?.data || []
+})
+
+const statsData = computed(() => {
+  return statsResponse.value?.data || {}
+})
+
+async function refreshAll() {
+  await Promise.all([refreshLayanan(), refreshStats()])
+}
+</script>
+
 <template>
-  <div
-    style="
-      font-family: Arial, sans-serif;
-      padding: 40px;
-      text-align: center;
-      max-width: 600px;
-      margin: 0 auto;
-    "
-  >
-    <h1>Tes Koneksi Decoupled Project</h1>
+  <div class="flex flex-col gap-6">
+    <!-- Header Bagian Atas -->
+    <div class="flex flex-col justify-between gap-4 px-4 sm:flex-row sm:items-center lg:px-6">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Portal Layanan Mahasiswa
+        </h1>
+        <p class="text-sm text-muted-foreground mt-1">
+          Ajukan permohonan surat akademik, riset, dan legalisir dokumen secara mandiri dan cepat.
+        </p>
+      </div>
 
-    <!-- Status Loading -->
-    <div v-if="pending" style="margin-top: 20px">
-      <p style="color: #666">Sedang menghubungkan ke server Laravel...</p>
+      <div class="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" @click="refreshAll" :disabled="loadingLayanan">
+          <IconRefresh class="size-4 mr-1.5" :class="{ 'animate-spin': loadingLayanan }" />
+          Muat Ulang
+        </Button>
+        <Button variant="secondary" size="sm" as-child>
+          <NuxtLink to="/pengajuan/lacak">
+            <IconSearch class="size-4 mr-1.5" />
+            Lacak Status
+          </NuxtLink>
+        </Button>
+        <Button size="sm" as-child>
+          <NuxtLink to="/pengajuan">
+            <IconPlus class="size-4 mr-1.5" />
+            Ajukan Surat
+          </NuxtLink>
+        </Button>
+      </div>
     </div>
 
-    <!-- Status Error -->
-    <div
-      v-else-if="error"
-      style="
-        background: #ffebee;
-        border: 1px solid #ef5350;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 20px;
-      "
-    >
-      <h3 style="color: #c62828; margin-top: 0">
-        ❌ Gagal Terhubung ke Backend
-      </h3>
-      <p style="color: #b71c1c; margin-bottom: 0">{{ error.message }}</p>
+    <!-- Metrik Statistik Cards -->
+    <SectionCards :stats="statsData" />
+
+    <!-- Error State -->
+    <div v-if="errorLayanan" class="px-4 lg:px-6">
+      <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-destructive flex items-start gap-3">
+        <IconAlertCircle class="size-5 shrink-0 mt-0.5" />
+        <div class="flex-1">
+          <h3 class="font-semibold text-base">Gagal memuat data layanan akademik</h3>
+          <p class="text-sm text-muted-foreground mt-1">
+            Terjadi kendala saat mengambil daftar layanan. Silakan klik tombol muat ulang di bawah.
+          </p>
+          <Button variant="outline" size="sm" class="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10" @click="refreshLayanan">
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
     </div>
 
-    <!-- Status Sukses -->
-    <div
-      v-else
-      style="
-        background: #e8f5e9;
-        border: 1px solid #66bb6a;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 20px;
-      "
-    >
-      <h3 style="color: #2e7d32; margin-top: 0">
-        ✅ Status: {{ data?.status }}
-      </h3>
-      <p style="font-size: 18px; color: #1b5e20">{{ data?.message }}</p>
-      <small style="color: #388e3c"
-        >Waktu Server Backend: {{ data?.timestamp }}</small
-      >
+    <!-- Loading State -->
+    <div v-else-if="loadingLayanan" class="px-4 lg:px-6 py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+      <div class="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <p class="text-sm font-medium">Memuat daftar layanan akademik...</p>
+    </div>
+
+    <!-- Data Table Layanan -->
+    <div v-else>
+      <DataTable :data="layananList" />
     </div>
   </div>
 </template>
-
-<script setup>
-const { data, pending, error } = await useFetch(
-  "http://backend_api.test/api/ping",
-);
-</script>

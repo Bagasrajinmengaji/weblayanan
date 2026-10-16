@@ -1,167 +1,66 @@
-# 📌 PROMPT INSTRUCTION FOR ANTIGRAVITY IDE
-
-## Project: Portal Layanan Mahasiswa (Decoupled: Laravel REST API + Nuxt 3)
-
-### 🚀 CONTEXT & ARCHITECTURE
-
-Anda adalah Senior Fullstack Developer yang membantu membangun **Portal Layanan Mahasiswa** menggunakan arsitektur *decoupled*:
-
-* **Backend (`backend_api`):** Laravel 11 (REST API via Laravel Herd)
-
-* **Frontend (`weblayanan`):** Nuxt 3 (Vue 3, Composition API `<script setup>`, Tailwind CSS)
-
-### 📋 SPESIFIKASI KEBUTUHAN STIPULASI STUDY CASE
-
-#### **1. Fitur Utama & Kebutuhan Pengguna**
-
-* **Pengguna Utama:** Mahasiswa & Petugas Administrasi.
-
-* **Jenis Layanan (Minimal 6 Data Simulation/Database):**
-
-  1. Surat Keterangan Aktif Kuliah
-
-  2. Surat Pengantar Penelitian
-
-  3. Legalisasi Ijazah & Transkrip
-
-  4. Surat Keterangan Bebas Pustaka
-
-  5. Surat Permohonan Cutip Akademik
-
-  6. Surat Pengantar Magang / PKL
-
-* **Alur Utama:**
-
-  1. Menemukan layanan & membaca persyaratan ringkas/jelas.
-
-  2. Mengisi formulir pengajuan + melampirkan dokumen + memeriksa ringkasan data.
-
-  3. Mengirim pengajuan dan memperoleh **Nomor Pelacakan / Tracking ID**.
-
-  4. Memantau status pengajuan + membaca catatan perbaikan jika pengajuan dikembalikan.
-
-#### **2. Kebutuhan UI/UX, Aksesibilitas & Responsivitas**
-
-* **4 State Handling Wajib (UI States):**
-
-  * `Memuat (Loading)`: Indikator proses / Skeleton loader.
-
-  * `Berhasil (Success)`: Tampilan data / Umpan balik sukses.
-
-  * `Kosong (Empty)`: Pesan jelas bila pencarian/data tidak ditemukan + saran tindakan.
-
-  * `Gagal (Error)`: Pesan error informatif + tombol "Coba Lagi" (Retry).
-
-* **Komponen & Keterbacaan:**
-
-  * Status pengajuan wajib menggunakan **Label Teks + Indikator Warna** (contoh: `[Diproses]` - Kuning, `[Dikembalikan]` - Merah, `[Selesai]` - Hijau).
-
-  * Tampilan responsif (Mobile & Desktop).
-
-  * Input form memiliki `<label>` semantik, pesan error didekat field terkait, serta tombol aksi spesifik (misal: "Kirim Pengajuan").
-
-### 🛠️ TUGAS KERJA / IMPLEMENTASI
-
-#### **BAGIAN 1: BACKEND LARAVEL (`backend_api`)**
-
-1. **Database Migration & Model (`PengajuanLayanan`):**
-
-   * `id` (Primary Key)
-
-   * `nomor_pelacakan` (String, Unique - Contoh: `TRX-20261015-XXXX`)
-
-   * `layanan_id` (String / Foreign Key)
-
-   * `nama_layanan` (String)
-
-   * `nama_mahasiswa` (String)
-
-   * `nim` (String)
-
-   * `email` (String)
-
-   * `dokumen_persyaratan` (String / Nullable)
-
-   * `catatan_perbaikan` (Text / Nullable)
-
-   * `status` (Enum: `diproses`, `dikembalikan`, `disetujui`, `ditolak`)
-
-   * `timestamps`
-
-2. **Seeder Data Layanan:**
-
-   * Buat seeder/dummy data untuk 6 jenis layanan beserta rincian persyaratan lengkapnya.
-
-3. **API Controller & Routes (`routes/api.php`):**
-
-   * `GET /api/layanan` : Mengambil daftar 6 layanan (Mendukung query parameter pencarian `?search=`).
-
-   * `GET /api/layanan/{id}` : Detail persyaratan layanan.
-
-   * `POST /api/pengajuan` : Mengirim pengajuan baru (Dengan validasi input ketat & generate `nomor_pelacakan`).
-
-   * `GET /api/pengajuan/track/{nomor_pelacakan}` : Memantau status pengajuan & membaca catatan perbaikan.
-
-4. **Standards Response JSON:**
-   Selalu kembalikan format JSON standar:
-
-   ```
-   {
-     "status": "success",
-     "message": "Pesan deskriptif",
-     "data": { ... }
-   }
-   
-   ```
-
-#### **BAGIAN 2: FRONTEND NUXT 3 (`weblayanan`)**
-
-1. **Struktur Halaman (Minimal 5 Pages):**
-
-   * `pages/index.vue`: Beranda + Pencarian Layanan (Case-insensitive & Trimmed) + Daftar Kartu Layanan (Komponen Reusable).
-
-   * `pages/layanan/[id].vue`: Detail Persyaratan Layanan + Button "Ajukan Sekarang".
-
-   * `pages/pengajuan/index.vue`: Form Pengajuan + Upload Dokumen Simulasi + Step Ringkasan sebelum Send.
-
-   * `pages/pengajuan/sukses.vue`: Tampilan Sukses + Informasi Nomor Pelacakan.
-
-   * `pages/lacak.vue`: Form Cek Status Pengajuan via Nomor Pelacakan + Tampilan Status & Catatan Perbaikan.
-
-2. **Komponen Reusable (`components/`):**
-
-   * `CardLayanan.vue` (Props: `id`, `title`, `description`, `icon`)
-
-   * `StatusBadge.vue` (Props: `status`)
-
-   * `BaseInput.vue` / `BaseAlert.vue`
-
-   * `LoadingSkeleton.vue` & `EmptyState.vue`
-
-3. **Layout (`layouts/default.vue`):**
-
-   * Navbar Navigasi Utama + Footer Informasi Kampus.
-
-### 🎯 INTRUKSI EKSEKUSI UNTUK AGENT ANTIGRAVITY
-
-Berdasarkan spesifikasi di atas, kerjakan tugas berikut secara berurutan:
-
-1. Buat **Migration**, **Model**, dan **Seeder** untuk `Layanan` dan `Pengajuan` di Laravel (`backend_api`).
-
-2. Buat **Controller & Route API** untuk pengajuan dan tracking di Laravel.
-
-3. Buat **Layout & Komponen Nuxt 3** yang mengimplementasikan 4 state handling (`pending`, `error`, `empty`, `success`).
-
-4. Buat seluruh **Halaman Nuxt 3** sesuai alur user story dari membaca persyaratan hingga lacak status pengajuan.
-
-```
-eof
-
-Teks prompt di atas sudah berisikan seluruh instruksi dan rincian spesifikasi tugas dari file PDF "Portal Layanan Mahasiswa" milikmu.
-
-### Cara Penggunaan:
-1. Kamu tinggal *copy* isi file `prompt_portal_layanan_mahasiswa.md` tersebut.
-2. Tempel (*paste*) langsung ke kolom chat Agent di **Antigravity IDE**.
-3. Perintahkan agent untuk mulai mengerjakan dari **BAGIAN 1 (Backend Laravel)** terlebih dahulu!
-
-```
+# PROMPT INSTRUKSI AGENT AI: PENGEMBANGAN PORTAL LAYANAN MAHASISWA (MONOREPO)
+
+## 📌 RINGKASAN PROYEK & STATUS TERAKHIR
+Proyek ini adalah Monorepo Aplikasi Web **Portal Layanan Administrasi Mahasiswa** yang terdiri dari:
+1. `backend_api/` : Laravel REST API Backend (Akan dikerjakan).
+2. `weblayanan/`  : Nuxt 3 Frontend dengan Tailwind v4 & Shadcn Vue (**STATUS: STATUS LAYOUT & KOMPONEN UTAMA SELESAI**).
+
+---
+
+## 🟢 STATUS PENGERJAAN FRONTEND (`weblayanan/`) — DONE
+Seluruh komponen UI dasar di `app/components/` telah selesai disiapkan dan disesuaikan:
+- **Konfigurasi**: Tailwind CSS v4, Font Inter, Tabler Icons (`@tabler/icons-vue`), Reka UI / Shadcn Vue.
+- **Layout & Navigasi**:
+  - `AppSidebar.vue`: Sidebar utama dengan menu khusus Portal Layanan Mahasiswa (`Dashboard Layanan`, `Cek Status`, `Riwayat`).
+  - `SiteHeader.vue`: Header atas dengan judul portal, notifikasi, dan tombol cepat pelacakan.
+  - `NavMain.vue`, `NavDocuments.vue`, `NavSecondary.vue`, `NavUser.vue`: Komponen navigasi yang sudah disesuaikan dengan alias path Nuxt `~/components/ui/...` dan routing `<NuxtLink>`.
+- **Komponen Konten**:
+  - `SectionCards.vue`: Statistik metrik layanan (`Layanan Tersedia`, `Sedang Diproses`, `Perlu Perbaikan`, `Selesai Terbit`).
+  - `DataTable.vue`: Tabel responsif menggunakan TanStack Table v8 untuk menampilkan daftar 6 Layanan Administrasi lengkap dengan fitur pagination dan tombol *Ajukan*.
+
+---
+
+## 🎯 TUGAS AGENT AI SAAT INI: FOKUS BAGIAN 1 (BACKEND LARAVEL API)
+
+Tolong kerjakan **BAGIAN 1: BACKEND LARAVEL REST API** di dalam folder `backend_api/` sesuai dengan spesifikasi berikut:
+
+### 1. Database Migration & Models
+Buat migration dan model untuk tabel-tabel berikut:
+- **`layanan`**:
+  - `id` (primary Key)
+  - `nama_layanan` (string)
+  - `slug` (string, unique)
+  - `deskripsi` (text)
+  - `persyaratan` (json / text - menyimpan array persyaratannya)
+  - `timestamps`
+- **`pengajuan`**:
+  - `id` (primary Key)
+  - `nomor_pelacakan` (string, unique, format: `REQ-YYYYMMDD-XXXX`)
+  - `layanan_id` (foreign key -> `layanan.id`)
+  - `nama_mahasiswa` (string)
+  - `nim` (string)
+  - `email` (string)
+  - `no_hp` (string)
+  - `berkas_persyaratan` (json / string - path file ter-upload)
+  - `status` (enum: `'Pending'`, `'Diproses'`, `'Perlu Perbaikan'`, `'Disetujui'`, `'Ditolak'`)
+  - `catatan_revisi` (text, nullable)
+  - `timestamps`
+
+### 2. Database Seeder (`DatabaseSeeder.php`)
+Isi seeder untuk tabel `layanan` dengan minimal 6 jenis layanan akademik/kemahasiswaan realistis (misal: *Surat Keterangan Aktif Kuliah*, *Surat Pengantar Penelitian*, *Legalisir Ijazah/SKPI*, *Surat Bebas Pustaka*, *Pengajuan Cuti Akademik*, *Surat Rekomendasi Beasiswa*).
+
+### 3. API Controllers & Routes (`routes/api.php`)
+Buat RESTful API Controller (`LayananController` dan `PengajuanController`) dengan endpoint:
+- `GET /api/layanan` : Mengambil daftar semua layanan.
+- `GET /api/layanan/{id}` : Mengambil detail layanan berdasarkan ID/slug.
+- `POST /api/pengajuan` : Menyimpan pengajuan baru (mengembalikan `nomor_pelacakan` unik).
+- `GET /api/pengajuan/lacak/{nomor_pelacakan}` : Mengecek status pengajuan & catatan revisi berdasarkan nomor pelacakan.
+- `GET /api/pengajuan/riwayat` : Mengambil riwayat pengajuan.
+- `PUT /api/pengajuan/{id}/status` : Mengupdate status pengajuan & catatan revisi (untuk admin/proses perbaikan).
+
+---
+
+## 🚀 PETUNJUK EKSEKUSI
+1. Jalankan `php artisan migrate --seed` di folder `backend_api/`.
+2. Pastikan CORS pada Laravel sudah dikonfigurasi (`config/cors.php`) agar API dapat diakses oleh Nuxt 3 di `http://localhost:3000`.
+3. Setelah Backend selesai dan dites, lanjutkan ke **BAGIAN 2 (Integrasi Nuxt 3 Fetch API)** di folder `weblayanan/`.

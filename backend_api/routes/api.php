@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\LayananController;
+use App\Http\Controllers\Api\PengajuanController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -9,3 +11,14 @@ Route::get('/ping', function () {
         'timestamp' => now()->toDateTimeString()
     ]);
 });
+
+// Endpoint Layanan Mahasiswa
+Route::get('/layanan', [LayananController::class, 'index']);
+Route::get('/layanan/{id}', [LayananController::class, 'show']);
+
+// Endpoint Pengajuan Layanan
+Route::post('/pengajuan', [PengajuanController::class, 'store']);
+Route::get('/pengajuan/riwayat', [PengajuanController::class, 'index']);
+Route::get('/pengajuan/stats', [PengajuanController::class, 'stats']);
+Route::get('/pengajuan/lacak/{nomor_pelacakan}', [PengajuanController::class, 'lacak']);
+Route::put('/pengajuan/{id}/status', [PengajuanController::class, 'updateStatus']);

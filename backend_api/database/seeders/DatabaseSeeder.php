@@ -17,9 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@student.ac.id'],
+            [
+                'name' => 'Administrator Portal',
+                'password' => bcrypt('password'),
+            ]
+        );
+
+        $this->call(LayananSeeder::class);
     }
 }

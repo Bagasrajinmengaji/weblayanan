@@ -1,0 +1,284 @@
+<script setup lang="ts">
+import {
+  IconAlertCircle,
+  IconArrowLeft,
+  IconCalendar,
+  IconCheck,
+  IconClock,
+  IconExternalLink,
+  IconFileAlert,
+  IconFileCheck,
+  IconFileText,
+  IconMail,
+  IconPhone,
+  IconSearch,
+  IconUser,
+  IconX,
+} from "@tabler/icons-vue"
+
+import { Badge } from "~/components/ui/badge"
+import { Button } from "~/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
+import { Input } from "~/components/ui/input"
+
+useSeoMeta({
+  title: "Pelacakan Status Pengajuan - Portal Mahasiswa",
+  description: "Pantau perkembangan dan status verifikasi berkas permohonan surat administrasi akademik secara real-time.",
+})
+
+const route = useRoute()
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase || "http://localhost:8000/api"
+
+const nomorInput = ref("")
+const isLoading = ref(false)
+const errorText = ref<string | null>(null)
+const pengajuanData = ref<any | null>(null)
+
+// Format tanggal ramah pengguna
+function formatDate(dateStr: string) {
+  if (!dateStr) return "-"
+  return new Date(dateStr).toLocaleString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+async function lacakPengajuan(nomor?: string) {
+  const code = (nomor || nomorInput.value || "").trim()
+  if (!code) {
+    errorText.value = "Masukkan nomor pelacakan terlebih dahulu."
+    return
+  }
+
+  isLoading.value = true
+  errorText.value = null
+  pengajuanData.value = null
+
+  try {
+    const res = await $fetch<any>(`${apiBase}/pengajuan/lacak/${encodeURIComponent(code)}`)
+    if (res.status === "success" && res.data) {
+      pengajuanData.value = res.data
+    } else {
+      errorText.value = res.message || "Nomor pelacakan tidak ditemukan."
+    }
+  } catch (err: any) {
+    errorText.value = err?.data?.message || err?.message || "Nomor pelacakan tidak ditemukan. Pastikan format nomor pelacakan sudah benar."
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Inisialisasi otomatis jika ada query param ?nomor=
+onMounted(() => {
+  if (route.query.nomor) {
+    nomorInput.value = String(route.query.nomor)
+    lacakPengajuan(nomorInput.value)
+  }
+})
+</script>
+
+<template>
+  <div class="max-w-4xl mx-auto px-4 lg:px-6 w-full flex flex-col gap-6">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-3">
+      <Button variant="ghost" size="sm" as-child class="gap-1.5 -ml-2 text-muted-foreground hover:text-foreground">
+        <NuxtLink to="/">
+          <IconArrowLeft class="size-4" />
+          Kembali ke Dashboard
+        </NuxtLink>
+      </Button>
+    </div>
+
+    <!-- Search Section -->
+    <Card class="border shadow-xs">
+      <CardHeader>
+        <CardTitle class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <IconSearch class="size-6 text-primary" />
+          Lacak Status Pengajuan Layanan
+        </CardTitle>
+        <CardDescription>
+          Masukkan nomor registrasi pelacakan (contoh: <code class="font-mono font-semibold">REQ-20261016-1002</code>) untuk memeriksa progres verifikasi dokumen Anda.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <form @submit.prevent="lacakPengajuan()" class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <Input
+              v-model="nomorInput"
+              placeholder="Masukkan nomor pelacakan (REQ-YYYYMMDD-XXXX)..."
+              class="font-mono text-base uppercase pl-3 pr-8"
+              required
+            />
+            <button
+              v-if="nomorInput"
+              type="button"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              @click="nomorInput = ''; pengajuanData = null; errorText = null"
+            >
+              <IconX class="size-4" />
+            </button>
+          </div>
+          <Button type="submit" :disabled="isLoading" class="gap-2 shrink-0 min-w-32.5">
+            <span v-if="isLoading" class="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+            <IconSearch v-else class="size-4" />
+            <span>{{ isLoading ? 'Mencari...' : 'Lacak Status' }}</span>
+          </Button>
+        </form>
+
+        <!-- Pesan Error / Tidak Ditemukan -->
+        <div v-if="errorText" class="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive flex items-start gap-2.5">
+          <IconAlertCircle class="size-5 shrink-0 mt-0.5" />
+          <div>
+            <span class="font-semibold">Pencarian Gagal</span>
+            <p class="mt-0.5 text-xs text-muted-foreground">{{ errorText }}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Hasil Pelacakan -->
+    <div v-if="pengajuanData" class="space-y-6">
+      <!-- Status Card Utama -->
+      <Card class="border shadow-xs overflow-hidden">
+        <div
+          class="h-2 w-full"
+          :class="{
+            'bg-amber-500': pengajuanData.status === 'Diproses',
+            'bg-slate-400': pengajuanData.status === 'Pending',
+            'bg-destructive': pengajuanData.status === 'Perlu Perbaikan' || pengajuanData.status === 'Ditolak',
+            'bg-emerald-500': pengajuanData.status === 'Disetujui',
+          }"
+        ></div>
+
+        <CardContent class="p-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nomor Registrasi</span>
+              <h2 class="text-2xl font-bold font-mono text-primary mt-0.5">
+                {{ pengajuanData.nomor_pelacakan }}
+              </h2>
+              <p class="text-sm font-medium text-foreground mt-1">
+                {{ pengajuanData.layanan?.nama_layanan || 'Layanan Akademik' }}
+              </p>
+            </div>
+
+            <!-- Badge Status -->
+            <div class="flex items-center gap-2">
+              <Badge
+                v-if="pengajuanData.status === 'Disetujui'"
+                class="px-3 py-1.5 text-sm gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+              >
+                <IconFileCheck class="size-4" />
+                Disetujui / Selesai
+              </Badge>
+              <Badge
+                v-else-if="pengajuanData.status === 'Diproses'"
+                class="px-3 py-1.5 text-sm gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold"
+              >
+                <IconClock class="size-4" />
+                Sedang Diproses
+              </Badge>
+              <Badge
+                v-else-if="pengajuanData.status === 'Perlu Perbaikan'"
+                class="px-3 py-1.5 text-sm gap-1.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold"
+              >
+                <IconFileAlert class="size-4" />
+                Perlu Perbaikan
+              </Badge>
+              <Badge
+                v-else-if="pengajuanData.status === 'Ditolak'"
+                class="px-3 py-1.5 text-sm gap-1.5 bg-destructive hover:bg-destructive/90 text-white font-semibold"
+              >
+                <IconX class="size-4" />
+                Ditolak
+              </Badge>
+              <Badge
+                v-else
+                variant="secondary"
+                class="px-3 py-1.5 text-sm gap-1.5 font-semibold"
+              >
+                <IconClock class="size-4" />
+                Menunggu Antrean (Pending)
+              </Badge>
+            </div>
+          </div>
+
+          <!-- Alert Box Catatan Revisi / Keterangan Petugas -->
+          <div
+            v-if="pengajuanData.catatan_revisi"
+            class="mt-6 rounded-lg p-4 text-sm"
+            :class="{
+              'border border-orange-300 bg-orange-50/80 dark:bg-orange-950/20 text-orange-900 dark:text-orange-200': pengajuanData.status === 'Perlu Perbaikan',
+              'border border-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200': pengajuanData.status === 'Disetujui',
+              'border border-destructive/30 bg-destructive/5 text-destructive': pengajuanData.status === 'Ditolak',
+              'border bg-muted/40 text-muted-foreground': pengajuanData.status === 'Pending' || pengajuanData.status === 'Diproses',
+            }"
+          >
+            <div class="font-semibold flex items-center gap-1.5">
+              <IconFileAlert class="size-4.5" />
+              Catatan & Instruksi Petugas BAAK:
+            </div>
+            <p class="mt-1 leading-relaxed whitespace-pre-line">{{ pengajuanData.catatan_revisi }}</p>
+          </div>
+
+          <!-- Detail Informasi Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <!-- Kolom 1: Pemohon -->
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
+                <IconUser class="size-4 text-primary" />
+                Informasi Pemohon
+              </h3>
+              <div class="rounded-lg border bg-card p-4 space-y-2 text-xs sm:text-sm">
+                <div class="flex justify-between py-1 border-b">
+                  <span class="text-muted-foreground">Nama Mahasiswa</span>
+                  <span class="font-semibold text-foreground">{{ pengajuanData.nama_mahasiswa }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b">
+                  <span class="text-muted-foreground">NIM</span>
+                  <span class="font-mono font-semibold text-foreground">{{ pengajuanData.nim }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b">
+                  <span class="text-muted-foreground">Email</span>
+                  <span class="text-foreground">{{ pengajuanData.email }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                  <span class="text-muted-foreground">Nomor WhatsApp</span>
+                  <span class="text-foreground">{{ pengajuanData.no_hp }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kolom 2: Layanan & Waktu -->
+            <div class="space-y-3">
+              <h3 class="text-sm font-semibold text-foreground flex items-center gap-2">
+                <IconCalendar class="size-4 text-primary" />
+                Riwayat Pengajuan
+              </h3>
+              <div class="rounded-lg border bg-card p-4 space-y-2 text-xs sm:text-sm">
+                <div class="flex justify-between py-1 border-b">
+                  <span class="text-muted-foreground">Tanggal Pengajuan</span>
+                  <span class="text-foreground">{{ formatDate(pengajuanData.created_at) }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b">
+                  <span class="text-muted-foreground">Pembaruan Terakhir</span>
+                  <span class="text-foreground">{{ formatDate(pengajuanData.updated_at) }}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                  <span class="text-muted-foreground">Layanan ID</span>
+                  <span class="font-mono text-foreground">#{{ pengajuanData.layanan_id }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>

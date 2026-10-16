@@ -1,0 +1,430 @@
+================================================================================
+  PANDUAN LENGKAP PENGUJIAN API DENGAN POSTMAN & CARA KERJA SISTEM
+  PORTAL LAYANAN MAHASISWA (MONOREPO LARAVEL REST API + NUXT 3)
+================================================================================
+
+Dibuat pada: 16 Oktober 2026
+Teknologi:
+- Backend  : Laravel 12 / 13 (PHP 8.4, SQLite, RESTful API, Sanctum, CORS)
+- Frontend : Nuxt 3 / 4 (Vue 3, Tailwind CSS v4, Shadcn Vue / Reka UI, TanStack Table v8)
+
+
+================================================================================
+1. ARSITEKTUR & CARA KERJA PROJECT (DECOUPLED MONOREPO)
+================================================================================
+
+Aplikasi ini menggunakan pendekatan Decoupled Architecture (Headless), di mana
+Backend dan Frontend terpisah secara logic namun berada dalam satu repository (Monorepo):
+
+Folder Utama:
+1. `backend_api/` : Bertindak sebagai penyedia data murni (RESTful API Server).
+   - Berjalan di: http://localhost:8000 atau http://backend_api.test
+   - Database: SQLite (`database/database.sqlite`)
+   - Bertanggung jawab memvalidasi input, menyimpan berkas fisik, meng-generate
+     nomor registrasi unik, mengelola status alur verifikasi berkas, dan menyajikan JSON.
+
+2. `weblayanan/`  : Bertindak sebagai Single Page Application (SPA / SSR) berbasis Nuxt 3.
+   - Berjalan di: http://localhost:3000
+   - Mengambil (fetch) data secara asynchronous dari Backend menggunakan `$fetch` & `useFetch`.
+   - Menampilkan UI modern berbasis Tailwind v4, komponen Shadcn, dan interaktivitas real-time.
+
+--------------------------------------------------------------------------------
+ALUR KERJA PENGGUNA (USER WORKFLOW):
+--------------------------------------------------------------------------------
+[1] DASHBOARD UTAMA (Nuxt: app/pages/index.vue)
+    - Pengguna membuka http://localhost:3000.
+    - Nuxt memanggil endpoint GET /api/layanan dan GET /api/pengajuan/stats.
+    - Tampil 4 kartu ringkasan status berkas (Layanan Tersedia, Sedang Diproses,
+      Perlu Perbaikan, Selesai Terbit) dan tabel daftar 6 layanan administrasi.
+
+[2] PENGAJUAN SURAT BARU (Nuxt: app/pages/pengajuan/index.vue)
+    - Mahasiswa mengklik tombol "Ajukan" pada tabel atau navigasi atas.
+    - Sistem memuat dropdown opsi layanan dan menampilkan daftar persyaratan resmi.
+    - Mahasiswa mengisi identitas: Nama, NIM, Email, No. HP, Catatan, dan mengunggah berkas PDF/JPG.
+    - Form dikirim ke POST /api/pengajuan (dukungan Multipart Form-Data).
+    - Backend Laravel:
+      a. Memvalidasi seluruh input.
+      b. Mengunggah file ke `storage/app/public/uploads/pengajuan`.
+      c. Men-generate nomor pelacakan unik format `REQ-YYYYMMDD-XXXX` (misal: REQ-20261016-8H2K).
+      d. Mengeset status awal menjadi 'Pending'.
+      e. Mengembalikan HTTP 201 Created dengan objek pengajuan lengkap.
+    - Frontend menampilkan dialog sukses dengan nomor pelacakan dan tombol salin/lacak.
+
+[3] PELACAKAN STATUS REAL-TIME (Nuxt: app/pages/pengajuan/lacak.vue)
+    - Mahasiswa memasukkan nomor pelacakan ke kolom pencarian (atau via link otomatis ?nomor=REQ-...).
+    - Nuxt memanggil GET /api/pengajuan/lacak/{nomor_pelacakan}.
+    - Sistem menampilkan status saat ini:
+      * 'Pending'        : Berkas masuk dalam antrean.
+      * 'Diproses'       : Berkas sedang diperiksa/ditandatangani pimpinan.
+      * 'Perlu Perbaikan': Dokumen buram/salah + Catatan instruksi perbaikan dari petugas BAAK.
+      * 'Disetujui'      : Surat resmi selesai dan siap diunduh/diambil di loket.
+      * 'Ditolak'        : Permohonan tidak memenuhi kriteria akademik.
+
+[4] RIWAYAT PENGAJUAN (Nuxt: app/pages/pengajuan/riwayat.vue)
+    - Mahasiswa / Admin membuka menu "Riwayat Pengajuan".
+    - Nuxt memanggil GET /api/pengajuan/riwayat.
+    - Tampil tabel seluruh pengajuan lengkap dengan pencarian nama/NIM/nomor serta filter status.
+
+[5] PROSES ADMIN / UPDATE STATUS
+    - Pihak administrasi dapat memperbarui status dan catatan revisi melalui PUT /api/pengajuan/{id}/status.
+    - Perubahan status langsung tercermin di dashboard metrik dan pelacakan mahasiswa.
+
+
+================================================================================
+2. REKAP APA SAJA YANG SUDAH KITA LAKUKAN
+================================================================================
+
+BAGIAN 1 - BACKEND LARAVEL REST API (Folder: backend_api/):
+[v] Membuat Database Migration:
+    - Tabel `layanan` (id, nama_layanan, slug, deskripsi, persyaratan JSON, timestamps)
+    - Tabel `pengajuan` (id, nomor_pelacakan UNIQUE, layanan_id FK, nama_mahasiswa, nim,
+      email, no_hp, berkas_persyaratan JSON, status ENUM, catatan_revisi TEXT, timestamps)
+[v] Membuat Eloquent Models:
+    - `App\Models\Layanan` (relasi hasMany ke Pengajuan, array cast pada persyaratan)
+    - `App\Models\Pengajuan` (relasi belongsTo ke Layanan, array cast pada berkas_persyaratan)
+[v] Membuat Database Seeder (`LayananSeeder.php` & `DatabaseSeeder.php`):
+    - Mengisi 6 layanan akademik nyata:
+      1. Surat Keterangan Aktif Kuliah
+      2. Surat Pengantar Penelitian & Riset
+      3. Legalisir Ijazah & Transkrip / SKPI
+      4. Surat Bebas Perpustakaan & Laboratorium
+      5. Pengajuan Cuti Akademik
+      6. Surat Rekomendasi Beasiswa & Prestasi
+    - Mengisi 5 data pengajuan sampel dengan status bervariasi untuk pengujian.
+[v] Membuat Controller RESTful:
+    - `App\Http\Controllers\Api\LayananController` (method index, show)
+    - `App\Http\Controllers\Api\PengajuanController` (method index, store, lacak, updateStatus, stats)
+[v] Mendaftarkan Routing API (`routes/api.php`):
+    - GET  /api/ping
+    - GET  /api/layanan
+    - GET  /api/layanan/{id}
+    - POST /api/pengajuan
+    - GET  /api/pengajuan/lacak/{nomor_pelacakan}
+    - GET  /api/pengajuan/riwayat
+    - GET  /api/pengajuan/stats
+    - PUT  /api/pengajuan/{id}/status
+[v] Konfigurasi CORS (`config/cors.php`):
+    - Mengizinkan request lintas domain dari Nuxt (http://localhost:3000).
+[v] Storage Link (`php artisan storage:link`):
+    - Folder `public/storage` terhubung ke `storage/app/public` untuk akses unduh file.
+[v] Testing Otomatis:
+    - Menulis Feature Test `PortalLayananApiTest.php` (49 tests, 220 assertions, 100% PASSING).
+
+BAGIAN 2 - FRONTEND INTEGRASI NUXT 3 (Folder: weblayanan/):
+[v] Mengonfigurasi `nuxt.config.ts`:
+    - Menambahkan `runtimeConfig.public.apiBase` -> `http://localhost:8000/api`.
+    - Mengatur `components.extensions: ['.vue']` untuk mencegah duplikasi nama komponen UI.
+    - Menambahkan `@types/node` dan memperbarui `typescript@^5.8.0` untuk kompatibilitas Nuxt 4.
+[v] Mengimplementasikan Layout Global (`app/layouts/default.vue`):
+    - Integrasi `SidebarProvider`, `AppSidebar`, `SiteHeader`, dan container konten utama.
+[v] Mengimplementasikan 4 Halaman Nuxt:
+    - `app/pages/index.vue`: Dashboard terhubung ke GET /api/layanan dan GET /api/pengajuan/stats.
+    - `app/pages/pengajuan/index.vue`: Form input pengajuan berkas (upload file) ke POST /api/pengajuan.
+    - `app/pages/pengajuan/lacak.vue`: Pelacakan nomor registrasi via GET /api/pengajuan/lacak/{nomor}.
+    - `app/pages/pengajuan/riwayat.vue`: Tabel riwayat pengajuan via GET /api/pengajuan/riwayat.
+[v] Perbaikan Warning Tailwind CSS v4 & TypeScript:
+    - Seluruh warning linter CSS (bg-linear, important modifier, min-w, dll.) dibersihkan total.
+    - `npx nuxi typecheck` berhasil lulus dengan EXIT CODE 0 (0 error, 0 warning).
+[v] Pengujian Langsung di Browser:
+    - Menguji dashboard, form submission real, pelacakan live, dan tabel riwayat.
+
+
+================================================================================
+3. CARA PENGUJIAN API MENGGUNAKAN POSTMAN
+================================================================================
+
+Sebelum memulai pengujian di Postman, pastikan server Laravel Backend sedang aktif.
+Cara menjalankan server Backend (jika belum running):
+  Buka terminal di folder: c:\webutsnuxt\backend_api
+  Jalankan perintah   : php artisan serve --port=8000
+  URL Base API        : http://localhost:8000/api
+  (Atau jika menggunakan Laragon / Virtual Host: http://backend_api.test/api)
+
+TIPS POSTMAN:
+- Tambahkan Header default untuk semua request:
+  Key   : Accept
+  Value : application/json
+
+--------------------------------------------------------------------------------
+TEST CASE 1: CEK KONEKSI BACKEND (HEALTH CHECK)
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL     : http://localhost:8000/api/ping
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "message": "Halo Gas! Server Laravel backend berhasil terhubung ke Nuxt 🎉",
+    "timestamp": "2026-10-16 16:30:00"
+  }
+
+--------------------------------------------------------------------------------
+TEST CASE 2: MENGAMBIL DAFTAR SEMUA LAYANAN AKADEMIK
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL     : http://localhost:8000/api/layanan
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "total": 6,
+    "data": [
+      {
+        "id": 1,
+        "nama_layanan": "Surat Keterangan Aktif Kuliah",
+        "slug": "surat-keterangan-aktif-kuliah",
+        "deskripsi": "Surat keterangan resmi universitas...",
+        "persyaratan": [
+          "Scan Kartu Tanda Mahasiswa (KTM)",
+          "Bukti Pembayaran UKT / SPP Semester Berjalan",
+          "Kartu Rencana Studi (KRS) Semester Aktif"
+        ],
+        "pengajuan_count": 2
+      },
+      ...
+    ]
+  }
+
+* Opsi Filter Pencarian Layanan:
+  URL: http://localhost:8000/api/layanan?search=penelitian
+
+--------------------------------------------------------------------------------
+TEST CASE 3: MENGAMBIL DETAIL LAYANAN (BERDASARKAN ID ATAU SLUG)
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL (by ID)   : http://localhost:8000/api/layanan/1
+- URL (by Slug) : http://localhost:8000/api/layanan/surat-keterangan-aktif-kuliah
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "data": {
+      "id": 1,
+      "nama_layanan": "Surat Keterangan Aktif Kuliah",
+      "slug": "surat-keterangan-aktif-kuliah",
+      "deskripsi": "Surat keterangan resmi...",
+      "persyaratan": [...]
+    }
+  }
+
+* Skenario Not Found:
+  URL: http://localhost:8000/api/layanan/99999
+  Expected Status: 404 Not Found
+  Response: {"status": "error", "message": "Layanan tidak ditemukan."}
+
+--------------------------------------------------------------------------------
+TEST CASE 4: MEMBUAT PENGAJUAN BARU (PAYLOAD JSON)
+--------------------------------------------------------------------------------
+- Method  : POST
+- URL     : http://localhost:8000/api/pengajuan
+- Headers :
+  * Content-Type : application/json
+  * Accept       : application/json
+- Body (Pilih 'raw' -> 'JSON'):
+  {
+    "layanan_id": 1,
+    "nama_mahasiswa": "Muhammad Bagas",
+    "nim": "2201011099",
+    "email": "bagas.mhs@student.ac.id",
+    "no_hp": "081234567899",
+    "catatan_revisi": "Mohon segera diproses untuk keperluan beasiswa.",
+    "berkas_persyaratan": [
+      "uploads/ktm_bagas.pdf",
+      "uploads/krs_semester_gasal.pdf"
+    ]
+  }
+- Expected Status: 201 Created
+- Expected Response Body:
+  {
+    "status": "success",
+    "message": "Pengajuan layanan berhasil disimpan.",
+    "nomor_pelacakan": "REQ-20261016-XXXX",  <-- Simpan kode ini untuk Test Case 6
+    "data": {
+      "id": 7,
+      "nomor_pelacakan": "REQ-20261016-XXXX",
+      "layanan_id": 1,
+      "nama_mahasiswa": "Muhammad Bagas",
+      "nim": "2201011099",
+      "email": "bagas.mhs@student.ac.id",
+      "no_hp": "081234567899",
+      "status": "Pending",
+      "catatan_revisi": null,
+      "layanan": {
+        "id": 1,
+        "nama_layanan": "Surat Keterangan Aktif Kuliah"
+      }
+    }
+  }
+
+--------------------------------------------------------------------------------
+TEST CASE 5: MEMBUAT PENGAJUAN DENGAN UPLOAD FILE FISIK (FORM-DATA)
+--------------------------------------------------------------------------------
+- Method  : POST
+- URL     : http://localhost:8000/api/pengajuan
+- Headers :
+  * Accept : application/json
+  (Jangan isi Content-Type secara manual di Header jika form-data, Postman akan mengaturnya)
+- Body (Pilih 'form-data'):
+  KEY                  TYPE    VALUE
+  -------------------------------------------------------------
+  layanan_id           Text    2
+  nama_mahasiswa       Text    Dewi Sartika
+  nim                  Text    2301011050
+  email                Text    dewi@student.ac.id
+  no_hp                Text    082198765432
+  berkas_persyaratan   File    [Pilih file PDF/JPG dari komputer]
+  catatan_revisi       Text    Pengajuan surat izin riset skripsi di RSUD.
+- Expected Status: 201 Created
+- Expected Response Body:
+  File fisik akan tersimpan otomatis di: `backend_api/storage/app/public/uploads/pengajuan/`
+  dan mengembalikan path & URL public dari file tersebut.
+
+--------------------------------------------------------------------------------
+TEST CASE 6: MELACAK STATUS PENGAJUAN (TRACKING)
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL     : http://localhost:8000/api/pengajuan/lacak/REQ-20261016-1002
+            (Atau ganti dengan nomor_pelacakan hasil dari Test Case 4/5)
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "data": {
+      "id": 2,
+      "nomor_pelacakan": "REQ-20261016-1002",
+      "nama_mahasiswa": "Siti Aisyah",
+      "nim": "2201011088",
+      "status": "Diproses",
+      "catatan_revisi": "Dokumen sedang dalam penandatanganan Wakil Dekan I.",
+      "layanan": {
+        "id": 2,
+        "nama_layanan": "Surat Pengantar Penelitian & Riset"
+      }
+    }
+  }
+
+* Skenario Nomor Tidak Ditemukan:
+  URL: http://localhost:8000/api/pengajuan/lacak/REQ-99999999-XXXX
+  Expected Status: 404 Not Found
+  Response: {"status": "error", "message": "Nomor pelacakan 'REQ-99999999-XXXX' tidak ditemukan..."}
+
+--------------------------------------------------------------------------------
+TEST CASE 7: MENGAMBIL RIWAYAT SELURUH PENGAJUAN
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL     : http://localhost:8000/api/pengajuan/riwayat
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "total": 6,
+    "data": [
+      {
+        "id": 6,
+        "nomor_pelacakan": "REQ-20261016-XXXX",
+        "nama_mahasiswa": "Muhammad Bagas",
+        "nim": "2201011099",
+        "status": "Pending",
+        "created_at": "2026-10-16T...",
+        "layanan": { ... }
+      },
+      ...
+    ]
+  }
+
+* Opsi Filter Parameter pada Riwayat:
+  1. Filter status Pending   : http://localhost:8000/api/pengajuan/riwayat?status=Pending
+  2. Filter status Diproses  : http://localhost:8000/api/pengajuan/riwayat?status=Diproses
+  3. Filter per NIM          : http://localhost:8000/api/pengajuan/riwayat?nim=2201011045
+  4. Search bebas            : http://localhost:8000/api/pengajuan/riwayat?search=Bagas
+
+--------------------------------------------------------------------------------
+TEST CASE 8: MEMPERBARUI STATUS & CATATAN REVISI (PETUGAS / ADMIN)
+--------------------------------------------------------------------------------
+- Method  : PUT
+- URL     : http://localhost:8000/api/pengajuan/1/status
+            (Atau gunakan nomor pelacakan: http://localhost:8000/api/pengajuan/REQ-20261016-1001/status)
+- Headers :
+  * Content-Type : application/json
+  * Accept       : application/json
+- Body (Pilih 'raw' -> 'JSON'):
+  {
+    "status": "Perlu Perbaikan",
+    "catatan_revisi": "Mohon unggah ulang scan KTM, foto saat ini terpotong di bagian nomor mahasiswa."
+  }
+- Status yang diizinkan (Enum):
+  * "Pending"
+  * "Diproses"
+  * "Perlu Perbaikan"
+  * "Disetujui"
+  * "Ditolak"
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "message": "Status pengajuan berhasil diperbarui.",
+    "data": {
+      "id": 1,
+      "status": "Perlu Perbaikan",
+      "catatan_revisi": "Mohon unggah ulang scan KTM...",
+      "updated_at": "2026-10-16T..."
+    }
+  }
+
+--------------------------------------------------------------------------------
+TEST CASE 9: MENGAMBIL RINGKASAN STATISTIK (DASHBOARD CARDS)
+--------------------------------------------------------------------------------
+- Method  : GET
+- URL     : http://localhost:8000/api/pengajuan/stats
+- Headers : Accept: application/json
+- Expected Status: 200 OK
+- Expected Response Body:
+  {
+    "status": "success",
+    "data": {
+      "layanan_tersedia": 6,
+      "sedang_diproses": 2,
+      "perlu_perbaikan": 1,
+      "selesai_terbit": 1,
+      "pending": 1,
+      "ditolak": 1,
+      "total_pengajuan": 6
+    }
+  }
+
+
+================================================================================
+4. CARA IMPORT CEPAT KE POSTMAN MENGGUNAKAN CURL
+================================================================================
+
+Jika Anda ingin langsung mencoba tanpa mengetik manual di Postman:
+1. Buka Postman.
+2. Klik tombol "Import" (di pojok kiri atas).
+3. Paste salah satu baris perintah cURL di bawah ini:
+
+Contoh 1 (Cek Layanan):
+curl -X GET http://localhost:8000/api/layanan -H "Accept: application/json"
+
+Contoh 2 (Tambah Pengajuan):
+curl -X POST http://localhost:8000/api/pengajuan \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d "{\"layanan_id\":1,\"nama_mahasiswa\":\"Budi Santoso\",\"nim\":\"2201011045\",\"email\":\"budi@student.ac.id\",\"no_hp\":\"081234567890\"}"
+
+Contoh 3 (Lacak Pengajuan):
+curl -X GET http://localhost:8000/api/pengajuan/lacak/REQ-20261016-1002 -H "Accept: application/json"
+
+Contoh 4 (Update Status):
+curl -X PUT http://localhost:8000/api/pengajuan/2/status \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d "{\"status\":\"Disetujui\",\"catatan_revisi\":\"Surat selesai ditandatangani. Silakan ambil di loket BAAK.\"}"
+
+================================================================================
+DOKUMEN INI SELESAI DAN SIAP DIGUNAKAN UNTUK DEMO & PENGUJIAN API
+================================================================================
