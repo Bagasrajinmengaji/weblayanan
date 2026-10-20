@@ -48,25 +48,7 @@ const notifications = computed(() => {
     }))
   }
 
-  // Fallback demo notifications jika belum ada data riil
-  return [
-    {
-      id: "demo-1",
-      nomor: "REQ-20261020-001",
-      title: "Surat Aktif Kuliah Disetujui",
-      desc: "Berkas Anda telah ditandatangani dan siap diambil/diunduh.",
-      status: "Disetujui",
-      time: "Hari ini",
-    },
-    {
-      id: "demo-2",
-      nomor: "REQ-20261020-002",
-      title: "Pengantar Penelitian Sedang Diproses",
-      desc: "Sedang dalam verifikasi oleh Bagian Tata Usaha Fakultas.",
-      status: "Diproses",
-      time: "Kemarin",
-    },
-  ]
+  return []
 })
 
 function navigateToLacak(nomor: string) {
@@ -91,7 +73,7 @@ function navigateToLacak(nomor: string) {
           <DropdownMenuTrigger as-child>
             <Button variant="ghost" size="icon" class="relative size-8">
               <IconBell class="size-4" />
-              <span class="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"></span>
+              <span v-if="notifications.length > 0" class="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary"></span>
               <span class="sr-only">Notifikasi</span>
             </Button>
           </DropdownMenuTrigger>
@@ -101,8 +83,10 @@ function navigateToLacak(nomor: string) {
               <span class="text-xs text-muted-foreground">Sistem Akademik</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <template v-for="notif in notifications" :key="notif.id">
+            <template v-if="notifications.length > 0">
               <DropdownMenuItem
+                v-for="notif in notifications"
+                :key="notif.id"
                 class="p-2.5 cursor-pointer rounded-md hover:bg-accent/60 transition-colors"
                 @click="navigateToLacak(notif.nomor)"
               >
@@ -132,6 +116,11 @@ function navigateToLacak(nomor: string) {
                 </div>
               </DropdownMenuItem>
             </template>
+            <div v-else class="py-6 px-4 text-center text-xs text-muted-foreground space-y-1">
+              <IconBell class="size-6 mx-auto text-muted-foreground/50 mb-1" />
+              <p class="font-medium text-foreground">Tidak Ada Notifikasi Baru</p>
+              <p class="text-[11px]">Pengajuan baru yang Anda buat akan muncul di sini.</p>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem as-child class="p-2 text-center text-xs text-primary font-medium cursor-pointer justify-center">
               <NuxtLink to="/pengajuan/riwayat" class="w-full text-center">
