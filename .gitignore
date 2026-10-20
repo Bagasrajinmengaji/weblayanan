@@ -66,3 +66,7 @@ logs
 .env
 .env.*
 !.env.example
+revisi.md
+REKAP_PROGRESS_DAN_KONTEKS_KONSULTASI_GEMINI.txt
+antigravity_prompt_document.md
+PANDUAN_PENGUJIAN_API_POSTMAN_DAN_CARA_KERJA.txt
