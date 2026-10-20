@@ -7,7 +7,7 @@ import {
   IconHistory,
   IconSearch,
   IconSettings,
-} from "@tabler/icons-vue"
+} from "@tabler/icons-vue";
 
 // Menggunakan auto-import Nuxt 3 untuk komponen lokal
 // dan alias path ~/components/ui/sidebar untuk Shadcn
@@ -19,13 +19,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "~/components/ui/sidebar"
+} from "~/components/ui/sidebar";
 
 // Data Menu Khusus Portal Layanan Mahasiswa
 const data = {
   user: {
     name: "Bagas Pramono",
-    email: "mahasiswa@pku.ac.id",
+    email: "mahasiswa@umpku.ac.id",
     avatar: "https://github.com/shadcn.png",
   },
   navMain: [
@@ -74,7 +74,7 @@ const data = {
       icon: IconFileText,
     },
   ],
-}
+};
 </script>
 
 <template>
@@ -87,12 +87,16 @@ const data = {
             class="data-[slot=sidebar-menu-button]:p-1.5!"
           >
             <NuxtLink to="/">
-              <div class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div
+                class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+              >
                 <IconBuildingBank class="size-5" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-bold">Portal Layanan</span>
-                <span class="truncate text-xs text-muted-foreground">Kemahasiswaan</span>
+                <span class="truncate text-xs text-muted-foreground"
+                  >Kemahasiswaan</span
+                >
               </div>
             </NuxtLink>
           </SidebarMenuButton>
