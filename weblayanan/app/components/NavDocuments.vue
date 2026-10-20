@@ -3,10 +3,10 @@ import type { Component } from "vue"
 
 import {
   IconDots,
+  IconEye,
   IconFileText,
   IconFolder,
-  IconShare3,
-  IconTrash,
+  IconSend,
 } from "@tabler/icons-vue"
 
 import {
@@ -27,6 +27,7 @@ import {
 } from "~/components/ui/sidebar"
 
 interface Document {
+  id?: number | string
   name: string
   url: string
   icon?: Component
@@ -57,40 +58,41 @@ const { isMobile } = useSidebar()
               class="data-[state=open]:bg-accent rounded-sm"
             >
               <IconDots />
-              <span class="sr-only">Lainnya</span>
+              <span class="sr-only">Menu Cepat</span>
             </SidebarMenuAction>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            class="w-28 rounded-lg"
+            class="w-44 rounded-lg"
             :side="isMobile ? 'bottom' : 'right'"
             :align="isMobile ? 'end' : 'start'"
           >
-            <DropdownMenuItem>
-              <IconFolder class="mr-2 h-4 w-4" />
-              <span>Buka</span>
+            <DropdownMenuItem as-child>
+              <NuxtLink :to="item.url" class="cursor-pointer flex items-center">
+                <IconSend class="mr-2 h-4 w-4 text-primary" />
+                <span>Ajukan Surat</span>
+              </NuxtLink>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <IconShare3 class="mr-2 h-4 w-4" />
-              <span>Bagikan</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
-              <IconTrash class="mr-2 h-4 w-4" />
-              <span>Hapus</span>
+            <DropdownMenuItem v-if="item.id" as-child>
+              <NuxtLink :to="`/layanan/${item.id}`" class="cursor-pointer flex items-center">
+                <IconEye class="mr-2 h-4 w-4 text-muted-foreground" />
+                <span>Lihat Detail Syarat</span>
+              </NuxtLink>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+
+      <!-- Menu Lainnya & Katalog Seluruh Layanan -->
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <SidebarMenuButton class="text-sidebar-foreground/70 hover:text-sidebar-foreground cursor-pointer">
+            <SidebarMenuButton class="text-sidebar-foreground/80 hover:text-sidebar-foreground cursor-pointer">
               <IconDots class="text-sidebar-foreground/70" />
               <span>Lainnya</span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            class="w-56 rounded-lg"
+            class="w-60 rounded-lg p-1.5"
             :side="isMobile ? 'bottom' : 'right'"
             :align="isMobile ? 'end' : 'start'"
           >
@@ -114,9 +116,9 @@ const { isMobile } = useSidebar()
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem as-child>
-              <NuxtLink to="/" class="cursor-pointer flex items-center font-medium text-primary">
+              <NuxtLink to="/layanan" class="cursor-pointer flex items-center font-medium text-primary">
                 <IconFolder class="mr-2 h-4 w-4" />
-                <span>Lihat Semua Layanan</span>
+                <span>Lihat Seluruh Layanan (Katalog)</span>
               </NuxtLink>
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { Component } from "vue";
-import { IconCirclePlusFilled, IconMail } from "@tabler/icons-vue";
+import { IconCirclePlusFilled } from "@tabler/icons-vue";
 
-// Gunakan ~/components/ui/... agar terbaca presisi di Nuxt 3
-import { Button } from "~/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -21,35 +19,41 @@ interface NavItem {
 defineProps<{
   items: NavItem[];
 }>();
+
+const route = useRoute();
 </script>
 
 <template>
   <SidebarGroup>
     <SidebarGroupContent class="flex flex-col gap-2">
+      <!-- Tombol Ajukan Surat Cepat -->
       <SidebarMenu>
-        <SidebarMenuItem class="flex items-center gap-2">
+        <SidebarMenuItem>
           <SidebarMenuButton
-            tooltip="Quick Create"
-            class="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+            as-child
+            tooltip="Ajukan Surat Baru"
+            class="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground duration-200 ease-linear shadow-xs"
           >
-            <IconCirclePlusFilled />
-            <span>Quick Create</span>
+            <NuxtLink to="/pengajuan">
+              <IconCirclePlusFilled class="size-4 shrink-0" />
+              <span class="font-medium">Ajukan Surat Baru</span>
+            </NuxtLink>
           </SidebarMenuButton>
-          <Button
-            size="icon"
-            class="size-8 group-data-[collapsible=icon]:opacity-0"
-            variant="outline"
-          >
-            <IconMail />
-            <span class="sr-only">Inbox</span>
-          </Button>
         </SidebarMenuItem>
       </SidebarMenu>
+
+      <!-- Daftar Menu Utama -->
       <SidebarMenu>
         <SidebarMenuItem v-for="item in items" :key="item.title">
-          <SidebarMenuButton :tooltip="item.title">
-            <component :is="item.icon" v-if="item.icon" />
-            <span>{{ item.title }}</span>
+          <SidebarMenuButton
+            as-child
+            :tooltip="item.title"
+            :is-active="route.path === item.url"
+          >
+            <NuxtLink :to="item.url">
+              <component :is="item.icon" v-if="item.icon" class="size-4 shrink-0" />
+              <span>{{ item.title }}</span>
+            </NuxtLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

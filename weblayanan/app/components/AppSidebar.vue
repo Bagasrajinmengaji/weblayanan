@@ -35,6 +35,11 @@ const data = {
       icon: IconDashboard,
     },
     {
+      title: "Katalog Semua Layanan",
+      url: "/layanan",
+      icon: IconFileText,
+    },
+    {
       title: "Cek Status / Lacak",
       url: "/pengajuan/lacak",
       icon: IconSearch,
@@ -59,16 +64,19 @@ const data = {
   ],
   documents: [
     {
+      id: 1,
       name: "Surat Aktif Kuliah",
       url: "/pengajuan?layanan_id=1",
       icon: IconFileText,
     },
     {
+      id: 2,
       name: "Pengantar Penelitian",
       url: "/pengajuan?layanan_id=2",
       icon: IconFileText,
     },
     {
+      id: 3,
       name: "Legalisir Ijazah",
       url: "/pengajuan?layanan_id=3",
       icon: IconFileText,

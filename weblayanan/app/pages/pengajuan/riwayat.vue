@@ -106,7 +106,7 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 lg:px-6 w-full flex flex-col gap-6">
+  <div class="max-w-6xl mx-auto px-4 lg:px-6 w-full min-w-0 max-w-full flex flex-col gap-6 overflow-x-hidden">
     <!-- Header Page -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>

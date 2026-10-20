@@ -60,7 +60,7 @@ async function refreshAll() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 min-w-0 max-w-full overflow-x-hidden">
     <!-- Header Bagian Atas -->
     <div class="flex flex-col justify-between gap-4 px-4 sm:flex-row sm:items-center lg:px-6">
       <div>

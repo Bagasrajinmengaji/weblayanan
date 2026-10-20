@@ -167,7 +167,7 @@ const table = useTable({
 </script>
 
 <template>
-  <div class="w-full flex flex-col gap-4">
+  <div class="w-full min-w-0 max-w-full flex flex-col gap-4 overflow-x-hidden">
     <!-- Toolbar Atas -->
     <div class="flex items-center justify-between px-4 lg:px-6">
       <h2 class="text-lg font-semibold tracking-tight">
