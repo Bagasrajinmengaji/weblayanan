@@ -100,7 +100,7 @@ const columns = columnHelper.columns([
     enableHiding: false,
   }),
   columnHelper.accessor("deskripsi", {
-    header: "Deskripsi",
+    header: "Deskripsi Singkat",
     cell: ({ row }) =>
       h(
         "div",
@@ -109,7 +109,7 @@ const columns = columnHelper.columns([
       ),
   }),
   columnHelper.accessor("persyaratan", {
-    header: "Persyaratan",
+    header: "Syarat Dokumen",
     cell: ({ row }) => {
       const list = (row.getValue("persyaratan") || []) as string[];
       return h(
@@ -164,6 +164,19 @@ const table = useTable({
       typeof updater === "function" ? updater(rowSelection.value) : updater;
   },
 });
+
+const columnLabels: Record<string, string> = {
+  nama_layanan: "Nama Layanan",
+  deskripsi: "Deskripsi Singkat",
+  persyaratan: "Syarat Dokumen",
+  created_at: "Tanggal Pengajuan",
+  actions: "Aksi",
+  select: "Pilih",
+};
+
+const getColumnLabel = (id: string) => {
+  return columnLabels[id] || id;
+};
 </script>
 
 <template>
@@ -194,13 +207,12 @@ const table = useTable({
               :key="column.id"
             >
               <DropdownMenuCheckboxItem
-                class="capitalize"
                 :model-value="column.getIsVisible()"
                 @update:model-value="
                   (value: any) => column.toggleVisibility(!!value)
                 "
               >
-                {{ column.id }}
+                {{ getColumnLabel(column.id) }}
               </DropdownMenuCheckboxItem>
             </template>
           </DropdownMenuContent>

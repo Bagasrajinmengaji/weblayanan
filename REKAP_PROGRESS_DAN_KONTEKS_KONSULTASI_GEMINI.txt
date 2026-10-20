@@ -1,0 +1,176 @@
+================================================================================
+   DOKUMEN REKAP PROGRESS, ARSITEKTUR, & STATUS SISTEM (PORTAL LAYANAN MAHASISWA)
+   Dibuat untuk: Bahan Konteks Konsultasi ke Gemini / AI Advisor
+   Tanggal Pembaruan: 20 Oktober 2026
+================================================================================
+
+--------------------------------------------------------------------------------
+1. RINGKASAN PROYEK & ARSITEKTUR TEKNOLOGI
+--------------------------------------------------------------------------------
+Proyek ini adalah Monorepo Aplikasi Web "Portal Layanan Administrasi Kemahasiswaan"
+menggunakan arsitektur Decoupled (Headless):
+
+A. BACKEND (Folder: backend_api/)
+   - Framework  : Laravel 12 / 13 (PHP 8.3+)
+   - Database   : SQLite (database/database.sqlite)
+   - Autentikasi: Laravel Sanctum
+   - Output     : Murni RESTful API JSON standar
+   - Port Server: http://localhost:8000 (dijalankan via: php artisan serve --port=8000)
+   - Status Uji : 49 Unit & Feature Tests (Pest Framework) lulus 100% (220 assertions).
+
+B. FRONTEND (Folder: weblayanan/)
+   - Framework  : Nuxt 4 (Vue 3, Vite, SSR/SPA)
+   - Bahasa     : TypeScript (nuxi typecheck: 0 error / 0 warning, Exit Code 0)
+   - Desain & UI: Tailwind CSS v4, Reka UI / Shadcn Vue, Tabler Icons, TanStack Table v8
+   - Port Server: http://localhost:3000 (dijalankan via: npm run dev)
+   - Komunikasi : Fetch API asynchronous via useFetch & $fetch ke http://localhost:8000/api
+
+
+--------------------------------------------------------------------------------
+2. DAFTAR FITUR & ALUR KERJA SISTEM (USER WORKFLOW)
+--------------------------------------------------------------------------------
+1. Dashboard Utama (http://localhost:3000)
+   - Menampilkan 4 kartu ringkasan status berkas: Layanan Tersedia, Sedang Diproses,
+     Perlu Perbaikan, Selesai Terbit.
+   - Tabel responsif TanStack Table v8 yang memuat daftar layanan dengan pagination,
+     pencarian kolom, dan tombol langsung "Ajukan".
+
+2. Katalog Seluruh Layanan (http://localhost:3000/layanan)
+   - Menampilkan kartu lengkap 6 jenis layanan akademik resmi:
+     1. Surat Keterangan Aktif Kuliah
+     2. Surat Pengantar Penelitian & Riset
+     3. Legalisir Ijazah & Transkrip / SKPI
+     4. Surat Bebas Perpustakaan & Laboratorium
+     5. Pengajuan Cuti Akademik
+     6. Surat Rekomendasi Beasiswa & Prestasi
+   - Live search filter berdasarkan nama surat, deskripsi, atau jenis berkas syarat.
+   - Tombol "Detail Syarat" dan "Ajukan Sekarang".
+
+3. Halaman Detail Layanan (http://localhost:3000/layanan/{id})
+   - Menampilkan rincian dasar hukum dan penjelasan surat.
+   - Ceklis dokumen persyaratan yang harus disiapkan.
+   - Diagram alur 4 tahap proses verifikasi (Form -> Verifikasi BAAK -> Pengesahan -> Terbit).
+   - Info SLA (1-3 hari kerja), biaya (Gratis Rp 0), dan tombol langsung "Ajukan Permohonan".
+
+4. Formulir Pengajuan Surat (http://localhost:3000/pengajuan)
+   - Dropdown opsi layanan yang otomatis menampilkan syarat resmi.
+   - Input identitas: Nama Lengkap, NIM, Email, No. HP/WhatsApp, dan Catatan.
+   - Input berkas persyaratan (dukungan Multipart Form-Data untuk PDF/JPG/PNG hingga 10MB).
+   - Generate otomatis Nomor Pelacakan unik format REQ-YYYYMMDD-XXXX (contoh: REQ-20261020-8H2K).
+   - Dialog sukses dilengkapi tombol salin kode dan pintasan langsung ke menu pelacakan.
+
+5. Pelacakan Status Berkas Real-Time (http://localhost:3000/pengajuan/lacak)
+   - Input nomor pelacakan atau auto-search via query parameter URL (?nomor=REQ-...).
+   - Indikator status visual:
+     * 'Pending'        : Menunggu antrean verifikasi.
+     * 'Diproses'       : Berkas sedang ditinjau / ditandatangani pimpinan.
+     * 'Perlu Perbaikan': Dokumen buram/salah + Catatan instruksi perbaikan dari petugas BAAK.
+     * 'Disetujui'      : Surat resmi selesai dan siap diunduh/diambil di loket.
+     * 'Ditolak'        : Permohonan tidak memenuhi kriteria akademik.
+
+6. Riwayat Pengajuan (http://localhost:3000/pengajuan/riwayat)
+   - Menampilkan tabel seluruh pengajuan mahasiswa.
+   - Filter dropdown status dan live search nama/NIM/nomor registrasi.
+   - Tombol "Lacak" langsung ke detail status pengajuan terkait.
+
+7. Navigasi & Sidebar
+   - Menu utama: Dashboard Layanan, Katalog Semua Layanan, Cek Status / Lacak, Riwayat.
+   - Dokumen favorit: Akses cepat ke 3 layanan terpopuler + submenu "... Lainnya".
+   - Header: Lonceng notifikasi dengan dropdown interaktif notifikasi surat disetujui/diproses.
+   - Menu sekunder: Pengaturan Akun dan Pusat Bantuan & FAQ.
+
+
+--------------------------------------------------------------------------------
+3. DAFTAR ENDPOINT BACKEND API (routes/api.php)
+--------------------------------------------------------------------------------
+- GET  /api/ping                         : Health check koneksi backend
+- GET  /api/layanan                      : Daftar seluruh layanan (support ?search=)
+- GET  /api/layanan/{id}                 : Detail layanan berdasarkan ID atau Slug
+- POST /api/pengajuan                    : Simpan permohonan baru & upload berkas fisik
+- GET  /api/pengajuan/lacak/{nomor}      : Ambil status & catatan revisi berdasarkan nomor pelacakan
+- GET  /api/pengajuan/riwayat            : Daftar seluruh pengajuan (support filter status, NIM, search)
+- GET  /api/pengajuan/stats              : Agregasi metrik kartu dashboard
+- PUT  /api/pengajuan/{id}/status        : Update status pengajuan & catatan revisi (untuk Petugas/Admin)
+
+
+--------------------------------------------------------------------------------
+4. PERBAIKAN PENTING YANG TELAH DILAKUKAN DI SESI TERAKHIR
+--------------------------------------------------------------------------------
+1. Mengatasi Tombol "Muat Ulang" & "Segarkan" Tidak Bisa Dipencet:
+   - Menjalankan server Laravel backend pada port 8000 via "php artisan serve --port=8000"
+     (sebelumnya hanya Vite frontend yang berjalan sehingga request API connection refused).
+   - Memperbaiki deklarasi props pada app/components/ui/button/Button.vue (menghapus @vue-ignore
+     dan mendaftarkan props asChild dan disabled secara resmi).
+   - Menambahkan state isRefreshing dengan animasi spin dan teks "Memuat..." / "Menyegarkan..."
+     sehingga memberikan feedback visual responsif saat tombol diklik.
+   - Membuat tombol lonceng notifikasi di SiteHeader.vue interaktif dengan dropdown notifikasi.
+
+2. Menghilangkan Masalah Geser Kanan-Kiri (Horizontal Scroll Hilang 100%):
+   - Menambahkan batasan overflow-x: hidden; max-width: 100vw; pada html, body di assets/css/main.css.
+   - Menambahkan min-w-0 max-w-full overflow-x-hidden pada SidebarInset.vue, layouts/default.vue,
+     dan root komponen halaman index.vue serta riwayat.vue.
+   - Memperbaiki grid kartu statistik SectionCards.vue menjadi "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
+     sehingga tersusun rapi berjajar 4 kolom di desktop tanpa membuat halaman melar ke kanan.
+
+3. Menyelesaikan Halaman Katalog Layanan & Menu "... Lainnya":
+   - Membuat halaman baru app/pages/layanan/index.vue sebagai katalog lengkap 6 layanan.
+   - Mengubah app/pages/layanan/[id].vue dari sekadar redirect menjadi halaman informasi detail resmi.
+   - Memperbaiki Navmain.vue agar menu navigasi utama membungkus NuxtLink dengan active highlight.
+   - Menghubungkan opsi "Lihat Seluruh Layanan (Katalog)" pada NavDocuments.vue ke /layanan.
+   - Menambahkan menu "Katalog Semua Layanan" di sidebar utama AppSidebar.vue.
+   - Menuntaskan typecheck TypeScript: 0 error / 0 warning (Exit Code 0).
+
+
+--------------------------------------------------------------------------------
+5. CATATAN HASIL UJI RASA PENGGUNA AWAM NON-IT ("ROLEPLAY BUDI")
+--------------------------------------------------------------------------------
+Ketika disimulasikan dari sudut pandang mahasiswa baru awam non-IT, ditemukan beberapa
+potensi kebingungan (friction points) yang bisa dijadikan bahan diskusi perbaikan:
+
+1. Ambigu Kotak Unggah Berkas Persyaratan:
+   - Ada 3 syarat dokumen (KTM, UKT, KRS), tapi hanya ada 1 kotak dropzone umum.
+   - Mahasiswa awam bingung apakah harus menggabungkan file jadi 1 PDF dulu atau bisa upload sekaligus.
+   - Saran: Tambahkan petunjuk "Bisa pilih lebih dari 1 file sekaligus" atau sediakan slot upload per syarat.
+
+2. Belum Ada Pop-Up Konfirmasi Sebelum Kirim:
+   - Begitu tombol "Kirim Pengajuan Sekarang" diklik, form langsung terkirim tanpa step review.
+   - Mahasiswa khawatir jika salah ketik 1 angka pada NIM atau nomor WhatsApp.
+   - Saran: Tambahkan dialog ringkasan: "Periksa Kembali Data Anda [Batal] [Kirim Sekarang]".
+
+3. Potensi Panik Jika Lupa Nomor Pelacakan (REQ-YYYYMMDD-XXXX):
+   - Jika mahasiswa lupa mencatat kodenya, di halaman lacak belum ada tombol bantuan pencarian.
+   - Saran: Beri link bantuan "Lupa nomor pelacakan? Cari berdasarkan Nama/NIM di menu Riwayat".
+
+4. Status "Perlu Perbaikan" Belum Ada Tombol Upload Berkas Revisi:
+   - Jika petugas BAAK meminta revisi (misal KTM buram), di halaman lacak belum ada form unggah ulang.
+   - Mahasiswa terpaksa mengulang pengajuan baru dari awal.
+   - Saran: Tambahkan tombol "Unggah Dokumen Perbaikan" langsung di halaman pelacakan.
+
+5. Status "Disetujui" Belum Ada Info Pengambilan Fisik / Download Digital:
+   - Mahasiswa bingung apakah surat digital bisa langsung diunduh atau harus datang ke loket BAAK.
+   - Saran: Tambahkan tombol "Unduh Surat Digital" dan panduan loket kampus Ruang 102.
+
+6. Label "Sesuaikan Kolom" pada Tabel Masih Format Database:
+   - Dropdown kolom masih menampilkan nama variabel koding ("deskripsi", "persyaratan").
+   - Saran: Ganti label teks menjadi lebih ramah ("Deskripsi Singkat", "Daftar Persyaratan").
+
+7. Panel Khusus Admin / Petugas Kampus:
+   - Backend API sudah mendukung penuh (PUT /api/pengajuan/{id}/status), namun antarmuka UI khusus
+     Admin/Petugas BAAK di frontend (misal /admin) belum dibuat.
+
+
+--------------------------------------------------------------------------------
+6. CARA MENJALANKAN PROJECT SECARA LOKAL
+--------------------------------------------------------------------------------
+Pastikan 2 terminal aktif:
+
+Terminal 1 (Backend Laravel API):
+   cd c:\webutsnuxt\backend_api
+   php artisan serve --port=8000
+   -> API Server aktif di: http://localhost:8000/api
+
+Terminal 2 (Frontend Nuxt 4):
+   cd c:\webutsnuxt\weblayanan
+   npm run dev
+   -> Web Application aktif di: http://localhost:3000
+================================================================================

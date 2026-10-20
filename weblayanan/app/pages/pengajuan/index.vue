@@ -1,18 +1,33 @@
 <script setup lang="ts">
 import {
   IconAlertCircle,
+  IconAlertTriangle,
   IconArrowLeft,
   IconCheck,
   IconCopy,
+  IconEye,
+  IconFile,
+  IconFileCheck,
   IconFileText,
   IconPaperclip,
+  IconRefresh,
   IconSend,
+  IconTrash,
   IconUpload,
 } from "@tabler/icons-vue"
 
 import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 import {
@@ -25,7 +40,7 @@ import {
 
 useSeoMeta({
   title: "Formulir Pengajuan Layanan - Portal Mahasiswa",
-  description: "Ajukan permohonan surat administrasi akademik dengan mengunggah berkas persyaratan.",
+  description: "Ajukan permohonan surat administrasi akademik dengan mengunggah berkas persyaratan terstruktur.",
 })
 
 const route = useRoute()
@@ -48,9 +63,12 @@ const form = reactive({
   catatan: "",
 })
 
-// File state
-const selectedFiles = ref<File[]>([])
-const fileError = ref<string | null>(null)
+// File state per slot persyaratan
+const filesBySlot = ref<Record<number, File | null>>({})
+const fileErrorsBySlot = ref<Record<number, string | null>>({})
+
+// Review Dialog State
+const isReviewDialogOpen = ref(false)
 
 // Submission states
 const isSubmitting = ref(false)
@@ -68,34 +86,101 @@ const selectedLayanan = computed(() => {
   return layananList.value.find((l: any) => String(l.id) === String(form.layanan_id))
 })
 
+// Persyaratan dokumen terstruktur
+const requirementsList = computed<string[]>(() => {
+  if (!selectedLayanan.value) return []
+  return selectedLayanan.value.persyaratan || []
+})
+
 // Inisialisasi jika query param berubah
 watch(
   () => route.query.layanan_id,
   (newId) => {
-    if (newId) form.layanan_id = String(newId)
+    if (newId) {
+      form.layanan_id = String(newId)
+    }
   },
   { immediate: true }
 )
 
-function handleFileChange(event: Event) {
+// Reset slot files jika layanan berganti
+watch(
+  () => form.layanan_id,
+  () => {
+    filesBySlot.value = {}
+    fileErrorsBySlot.value = {}
+  }
+)
+
+const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"]
+const maxFileSizeBytes = 10 * 1024 * 1024 // 10MB
+
+function validateFile(file: File): string | null {
+  const extension = "." + file.name.split(".").pop()?.toLowerCase()
+  if (!allowedExtensions.includes(extension)) {
+    return `Format file "${file.name}" tidak didukung. Harap unggah berkas PDF, JPG, atau PNG.`
+  }
+  if (file.size > maxFileSizeBytes) {
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
+    return `Ukuran file "${file.name}" (${sizeMb} MB) melebihi batas maksimal 10MB.`
+  }
+  return null
+}
+
+function handleSlotFileChange(slotIndex: number, event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    fileError.value = null
-    const files = Array.from(target.files)
-    
-    // Validasi ukuran max 10MB per file
-    for (const f of files) {
-      if (f.size > 10 * 1024 * 1024) {
-        fileError.value = `Ukuran file "${f.name}" melebihi batas 10MB.`
-        return
-      }
+    const file = target.files[0]
+    if (!file) return
+
+    const validationError = validateFile(file)
+    if (validationError) {
+      fileErrorsBySlot.value[slotIndex] = validationError
+      target.value = "" // reset input
+      return
     }
-    selectedFiles.value = files
+
+    fileErrorsBySlot.value[slotIndex] = null
+    filesBySlot.value[slotIndex] = file
   }
 }
 
-function removeFile(index: number) {
-  selectedFiles.value.splice(index, 1)
+function removeSlotFile(slotIndex: number) {
+  filesBySlot.value[slotIndex] = null
+  fileErrorsBySlot.value[slotIndex] = null
+  const inputEl = document.getElementById(`slot-input-${slotIndex}`) as HTMLInputElement | null
+  if (inputEl) inputEl.value = ""
+}
+
+function triggerSlotInput(slotIndex: number) {
+  const inputEl = document.getElementById(`slot-input-${slotIndex}`) as HTMLInputElement | null
+  if (inputEl) inputEl.click()
+}
+
+// Daftar berkas yang telah terunggah
+const uploadedFilesSummary = computed(() => {
+  const result: { slotIndex: number; requirementName: string; file: File }[] = []
+  if (requirementsList.value.length > 0) {
+    requirementsList.value.forEach((req, idx) => {
+      const file = filesBySlot.value[idx]
+      if (file) {
+        result.push({ slotIndex: idx, requirementName: req, file })
+      }
+    })
+  } else {
+    // Layanan tanpa persyaratan spesifik (slot 0)
+    const file = filesBySlot.value[0]
+    if (file) {
+      result.push({ slotIndex: 0, requirementName: "Dokumen Persyaratan Umum", file })
+    }
+  }
+  return result
+})
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
 function copyTrackingCode(code: string) {
@@ -106,40 +191,52 @@ function copyTrackingCode(code: string) {
   }, 2000)
 }
 
-async function submitPengajuan() {
+// Langkah 1: Validasi form sebelum membuka Dialog Ringkasan
+function handleReview() {
   errorMessage.value = null
-  fileError.value = null
 
   if (!form.layanan_id) {
-    errorMessage.value = "Silakan pilih jenis layanan terlebih dahulu."
+    errorMessage.value = "Silakan pilih jenis layanan akademik terlebih dahulu."
     return
   }
-  if (!form.nama_mahasiswa || !form.nim || !form.email || !form.no_hp) {
-    errorMessage.value = "Mohon lengkapi seluruh kolom identitas mahasiswa."
+  if (!form.nama_mahasiswa.trim() || !form.nim.trim() || !form.email.trim() || !form.no_hp.trim()) {
+    errorMessage.value = "Mohon lengkapi seluruh kolom identitas mahasiswa bertanda bintang (*)."
     return
   }
 
+  // Buka Modal Dialog Ringkasan
+  isReviewDialogOpen.value = true
+}
+
+// Langkah 2: Submit ke backend API setelah konfirmasi
+async function confirmAndSubmit() {
+  isReviewDialogOpen.value = false
+  errorMessage.value = null
   isSubmitting.value = true
 
   try {
     const formData = new FormData()
     formData.append("layanan_id", form.layanan_id)
-    formData.append("nama_mahasiswa", form.nama_mahasiswa)
-    formData.append("nim", form.nim)
-    formData.append("email", form.email)
-    formData.append("no_hp", form.no_hp)
-    if (form.catatan) {
-      formData.append("catatan_revisi", form.catatan)
+    formData.append("nama_mahasiswa", form.nama_mahasiswa.trim())
+    formData.append("nim", form.nim.trim())
+    formData.append("email", form.email.trim())
+    formData.append("no_hp", form.no_hp.trim())
+    if (form.catatan.trim()) {
+      formData.append("catatan_revisi", form.catatan.trim())
     }
 
-    // Lampirkan berkas persyaratan jika ada
-    if (selectedFiles.value.length === 1 && selectedFiles.value[0]) {
-      formData.append("berkas_persyaratan", selectedFiles.value[0])
-    } else if (selectedFiles.value.length > 1) {
-      selectedFiles.value.forEach((file, idx) => {
-        if (file) {
-          formData.append(`berkas_persyaratan[${idx}]`, file)
-        }
+    // Lampirkan berkas dari slot yang terisi
+    const filesToUpload: File[] = []
+    Object.keys(filesBySlot.value).forEach((key) => {
+      const f = filesBySlot.value[Number(key)]
+      if (f) filesToUpload.push(f)
+    })
+
+    if (filesToUpload.length === 1 && filesToUpload[0]) {
+      formData.append("berkas_persyaratan", filesToUpload[0])
+    } else if (filesToUpload.length > 1) {
+      filesToUpload.forEach((file, idx) => {
+        formData.append(`berkas_persyaratan[${idx}]`, file)
       })
     }
 
@@ -231,7 +328,7 @@ async function submitPengajuan() {
               Lihat Riwayat
             </NuxtLink>
           </Button>
-          <Button variant="ghost" @click="successData = null; form.nama_mahasiswa = ''; form.nim = ''; selectedFiles = []">
+          <Button variant="ghost" @click="successData = null; form.nama_mahasiswa = ''; form.nim = ''; filesBySlot = {}">
             Ajukan Surat Lain
           </Button>
         </div>
@@ -245,13 +342,13 @@ async function submitPengajuan() {
           Formulir Permohonan Layanan Mahasiswa
         </CardTitle>
         <CardDescription>
-          Isi data identitas mahasiswa dan unggah dokumen pendukung sesuai persyaratan layanan.
+          Isi data identitas mahasiswa dan unggah dokumen pendukung sesuai persyaratan slot layanan.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
-        <form @submit.prevent="submitPengajuan" class="space-y-6">
-          <!-- Alert Error -->
+        <form @submit.prevent="handleReview" class="space-y-6">
+          <!-- Alert Error Utama -->
           <div v-if="errorMessage" class="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2.5">
             <IconAlertCircle class="size-4 shrink-0" />
             <span>{{ errorMessage }}</span>
@@ -353,56 +450,175 @@ async function submitPengajuan() {
             </div>
           </div>
 
-          <!-- Section 3: Upload Berkas Persyaratan -->
-          <div class="space-y-2">
-            <Label class="text-sm font-semibold">
-              Unggah Berkas Persyaratan (PDF / JPG / PNG)
-            </Label>
-            
-            <div class="rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors p-6 text-center cursor-pointer bg-muted/20 relative">
+          <!-- Section 3: Unggah Berkas Persyaratan (Multi-Dropzone / Slot Spesifik) -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <Label class="text-sm font-semibold flex items-center gap-1.5">
+                  <IconFileCheck class="size-4 text-primary" />
+                  Unggah Berkas Persyaratan
+                </Label>
+                <p class="text-xs text-muted-foreground mt-0.5">
+                  Format yang didukung: <strong>PDF, JPG, PNG</strong> &bull; Maksimum ukuran <strong>10MB</strong> per file.
+                </p>
+              </div>
+              <Badge variant="outline" class="text-xs">
+                {{ uploadedFilesSummary.length }} / {{ requirementsList.length || 1 }} Berkas Terunggah
+              </Badge>
+            </div>
+
+            <!-- Tampilan Jika Layanan Memiliki Daftar Persyaratan Spesifik -->
+            <div v-if="requirementsList.length > 0" class="space-y-3">
+              <div
+                v-for="(syarat, idx) in requirementsList"
+                :key="idx"
+                class="rounded-xl border transition-all duration-200 overflow-hidden"
+                :class="[
+                  filesBySlot[idx]
+                    ? 'border-emerald-500/70 bg-emerald-50/30 dark:bg-emerald-950/20'
+                    : fileErrorsBySlot[idx]
+                    ? 'border-destructive/60 bg-destructive/5'
+                    : 'border-border bg-card hover:border-primary/40'
+                ]"
+              >
+                <!-- Hidden file input per slot -->
+                <input
+                  :id="`slot-input-${idx}`"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  @change="(e) => handleSlotFileChange(idx, e)"
+                  class="hidden"
+                />
+
+                <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <div
+                      class="size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-semibold"
+                      :class="[
+                        filesBySlot[idx]
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-muted text-muted-foreground'
+                      ]"
+                    >
+                      <IconCheck v-if="filesBySlot[idx]" class="size-4" />
+                      <span v-else>{{ idx + 1 }}</span>
+                    </div>
+
+                    <div class="space-y-1 min-w-0 flex-1">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-foreground line-clamp-1">
+                          Slot {{ idx + 1 }}: {{ syarat }}
+                        </span>
+                        <Badge
+                          v-if="filesBySlot[idx]"
+                          variant="secondary"
+                          class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px] px-1.5 py-0 h-4.5"
+                        >
+                          Siap
+                        </Badge>
+                      </div>
+
+                      <!-- Detail File Terunggah di Slot Ini -->
+                      <div v-if="filesBySlot[idx]" class="flex items-center gap-2 text-xs text-muted-foreground pt-0.5">
+                        <IconPaperclip class="size-3.5 text-emerald-600 shrink-0" />
+                        <span class="font-medium text-foreground truncate max-w-xs">{{ filesBySlot[idx]?.name }}</span>
+                        <span class="shrink-0 text-[11px]">({{ formatFileSize(filesBySlot[idx]?.size || 0) }})</span>
+                      </div>
+                      <p v-else class="text-xs text-muted-foreground">
+                        Belum ada dokumen yang diunggah untuk slot ini.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Aksi Tombol Slot -->
+                  <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <template v-if="filesBySlot[idx]">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 text-xs gap-1"
+                        @click="triggerSlotInput(idx)"
+                      >
+                        <IconRefresh class="size-3.5" />
+                        Ganti
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="h-8 text-xs text-destructive hover:bg-destructive/10 px-2.5 gap-1"
+                        @click="removeSlotFile(idx)"
+                      >
+                        <IconTrash class="size-3.5" />
+                        Hapus
+                      </Button>
+                    </template>
+                    <template v-else>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 text-xs gap-1.5 border-dashed hover:border-primary"
+                        @click="triggerSlotInput(idx)"
+                      >
+                        <IconUpload class="size-3.5" />
+                        Pilih Berkas
+                      </Button>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Error Message Instan per Slot -->
+                <div v-if="fileErrorsBySlot[idx]" class="px-4 pb-3 text-xs text-destructive flex items-center gap-1.5">
+                  <IconAlertCircle class="size-3.5 shrink-0" />
+                  <span>{{ fileErrorsBySlot[idx] }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tampilan Fallback Jika Layanan Belum Dipilih / Tanpa Syarat Khusus -->
+            <div v-else class="rounded-xl border border-dashed p-6 text-center bg-muted/20">
               <input
+                id="slot-input-0"
                 type="file"
-                multiple
                 accept=".pdf,.jpg,.jpeg,.png"
-                @change="handleFileChange"
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                @change="(e) => handleSlotFileChange(0, e)"
+                class="hidden"
               />
-              <div class="flex flex-col items-center justify-center gap-2 pointer-events-none">
+              <div class="flex flex-col items-center justify-center gap-2">
                 <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                   <IconUpload class="size-5" />
                 </div>
                 <div>
-                  <span class="font-medium text-sm text-foreground">Klik atau seret file ke sini untuk mengunggah</span>
-                  <p class="text-xs text-muted-foreground mt-0.5">Format didukung: PDF, JPG, PNG (Maksimum 10MB per file)</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- List File Terpilih -->
-            <div v-if="selectedFiles.length > 0" class="mt-3 space-y-1.5">
-              <div
-                v-for="(file, index) in selectedFiles"
-                :key="index"
-                class="flex items-center justify-between p-2 rounded-md border bg-card text-xs"
-              >
-                <div class="flex items-center gap-2 truncate max-w-sm">
-                  <IconPaperclip class="size-3.5 text-primary shrink-0" />
-                  <span class="truncate font-medium">{{ file.name }}</span>
-                  <span class="text-muted-foreground shrink-0">({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+                  <p class="font-medium text-sm text-foreground">
+                    {{ form.layanan_id ? 'Unggah Dokumen Pendukung' : 'Pilih jenis layanan di atas terlebih dahulu' }}
+                  </p>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    Slot unggah dokumen persyaratan akan disesuaikan secara otomatis.
+                  </p>
                 </div>
                 <Button
+                  v-if="form.layanan_id && !filesBySlot[0]"
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  class="h-6 text-destructive hover:bg-destructive/10 px-2"
-                  @click="removeFile(index)"
+                  class="mt-2"
+                  @click="triggerSlotInput(0)"
                 >
-                  Hapus
+                  Pilih Berkas (.pdf, .jpg, .png)
                 </Button>
+
+                <!-- Status file di slot fallback -->
+                <div v-if="filesBySlot[0]" class="flex items-center gap-3 mt-3 p-2.5 rounded-lg border border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs">
+                  <IconPaperclip class="size-4 text-emerald-600" />
+                  <span class="font-medium text-foreground">{{ filesBySlot[0]?.name }}</span>
+                  <span class="text-muted-foreground">({{ formatFileSize(filesBySlot[0]?.size || 0) }})</span>
+                  <Button type="button" variant="ghost" size="sm" class="h-6 text-destructive px-1.5 text-xs" @click="removeSlotFile(0)">Hapus</Button>
+                </div>
+                <p v-if="fileErrorsBySlot[0]" class="text-xs text-destructive mt-1">{{ fileErrorsBySlot[0] }}</p>
               </div>
             </div>
-
-            <p v-if="fileError" class="text-xs text-destructive mt-1">{{ fileError }}</p>
           </div>
 
           <!-- Section 4: Catatan Tambahan (Opsional) -->
@@ -414,24 +630,116 @@ async function submitPengajuan() {
               id="catatan"
               v-model="form.catatan"
               rows="3"
-              placeholder="Tambahkan keterangan instansi tujuan surat, keperluan khusus, dll."
+              placeholder="Tambahkan keterangan instansi tujuan surat, keperluan khusus, atau informasi relevan lainnya..."
               class="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             ></textarea>
           </div>
 
-          <!-- Tombol Submit -->
-          <div class="flex items-center justify-end gap-3 pt-4 border-t">
+          <!-- Tombol Aksi Form -->
+          <div class="flex items-center justify-between pt-4 border-t">
             <Button variant="outline" type="button" as-child>
               <NuxtLink to="/">Batal</NuxtLink>
             </Button>
-            <Button type="submit" :disabled="isSubmitting" class="gap-2 min-w-35">
-              <span v-if="isSubmitting" class="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
-              <IconSend v-else class="size-4" />
-              <span>{{ isSubmitting ? 'Mengirim...' : 'Kirim Pengajuan' }}</span>
+            <Button type="submit" class="gap-2 min-w-36">
+              <IconEye class="size-4" />
+              <span>Tinjau & Kirim Pengajuan</span>
             </Button>
           </div>
         </form>
       </CardContent>
     </Card>
+
+    <!-- Modal Ringkasan Data (Review Dialog) Sebelum Submit -->
+    <Dialog :open="isReviewDialogOpen" @update:open="isReviewDialogOpen = $event">
+      <DialogContent class="sm:max-w-[520px]">
+        <DialogHeader>
+          <DialogTitle class="text-lg font-bold flex items-center gap-2">
+            <IconFileCheck class="size-5 text-primary" />
+            Konfirmasi Data Pengajuan
+          </DialogTitle>
+          <DialogDescription>
+            Mohon periksa kembali kelengkapan identitas dan berkas lampiran sebelum berkas diproses ke bagian akademik.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-4 py-2 text-sm">
+          <!-- Ringkasan Identitas -->
+          <div class="rounded-lg border bg-muted/40 p-3.5 space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-1">
+              Identitas Pemohon
+            </div>
+            <div class="grid grid-cols-3 gap-1 text-xs">
+              <span class="text-muted-foreground">Nama:</span>
+              <span class="col-span-2 font-medium text-foreground">{{ form.nama_mahasiswa }}</span>
+              <span class="text-muted-foreground">NIM:</span>
+              <span class="col-span-2 font-mono font-medium text-foreground">{{ form.nim }}</span>
+              <span class="text-muted-foreground">Layanan:</span>
+              <span class="col-span-2 font-medium text-primary">{{ selectedLayanan?.nama_layanan || '-' }}</span>
+              <span class="text-muted-foreground">WhatsApp:</span>
+              <span class="col-span-2 font-medium text-foreground">{{ form.no_hp }}</span>
+              <span class="text-muted-foreground">Email:</span>
+              <span class="col-span-2 font-medium text-foreground">{{ form.email }}</span>
+            </div>
+          </div>
+
+          <!-- Ringkasan Berkas Terlampir -->
+          <div class="rounded-lg border p-3.5 space-y-2">
+            <div class="flex items-center justify-between border-b pb-1">
+              <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Berkas Terlampir
+              </span>
+              <Badge variant="secondary" class="text-[10px]">
+                {{ uploadedFilesSummary.length }} Dokumen
+              </Badge>
+            </div>
+
+            <div v-if="uploadedFilesSummary.length > 0" class="space-y-1.5 pt-1">
+              <div
+                v-for="item in uploadedFilesSummary"
+                :key="item.slotIndex"
+                class="flex items-center justify-between text-xs p-2 rounded-md bg-muted/30"
+              >
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <IconFile class="size-3.5 text-primary shrink-0" />
+                  <div class="min-w-0">
+                    <p class="font-medium text-foreground truncate">{{ item.file.name }}</p>
+                    <p class="text-[10px] text-muted-foreground truncate">{{ item.requirementName }}</p>
+                  </div>
+                </div>
+                <span class="text-[11px] text-muted-foreground shrink-0 pl-2">
+                  {{ formatFileSize(item.file.size) }}
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-xs text-amber-600 dark:text-amber-400 py-1 flex items-center gap-1.5">
+              <IconAlertTriangle class="size-4 shrink-0" />
+              <span>Tidak ada berkas yang dilampirkan. Pastikan berkas pendukung tidak diwajibkan oleh fakultas.</span>
+            </div>
+          </div>
+
+          <!-- Catatan Tambahan Jika Ada -->
+          <div v-if="form.catatan" class="rounded-lg border p-3 text-xs bg-muted/20">
+            <span class="font-semibold text-muted-foreground">Catatan Tambahan:</span>
+            <p class="mt-0.5 text-foreground italic">{{ form.catatan }}</p>
+          </div>
+        </div>
+
+        <DialogFooter class="gap-2 sm:gap-0">
+          <Button variant="outline" type="button" @click="isReviewDialogOpen = false">
+            Perbaiki Data
+          </Button>
+          <Button
+            type="button"
+            class="gap-1.5"
+            :disabled="isSubmitting"
+            @click="confirmAndSubmit"
+          >
+            <span v-if="isSubmitting" class="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+            <IconSend v-else class="size-4" />
+            <span>{{ isSubmitting ? 'Mengirim...' : 'Kirim Sekarang' }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

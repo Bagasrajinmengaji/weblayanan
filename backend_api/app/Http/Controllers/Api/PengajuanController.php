@@ -182,6 +182,68 @@ class PengajuanController extends Controller
     }
 
     /**
+     * Mengunggah berkas perbaikan untuk pengajuan yang berstatus 'Perlu Perbaikan'.
+     */
+    public function unggahRevisi(Request $request, string $nomor_pelacakan): JsonResponse
+    {
+        $pengajuan = Pengajuan::where('nomor_pelacakan', trim($nomor_pelacakan))->first();
+
+        if (! $pengajuan) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pengajuan tidak ditemukan.',
+            ], 404);
+        }
+
+        $request->validate([
+            'berkas_perbaikan' => 'required',
+            'catatan_pemohon' => 'nullable|string|max:500',
+        ]);
+
+        $berkasLama = is_array($pengajuan->berkas_persyaratan) ? $pengajuan->berkas_persyaratan : [];
+        $berkasBaru = [];
+
+        if ($request->hasFile('berkas_perbaikan')) {
+            $files = $request->file('berkas_perbaikan');
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    $path = $file->store('uploads/pengajuan', 'public');
+                    $berkasBaru[] = [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_url' => asset('storage/' . $path),
+                        'is_revision' => true,
+                        'uploaded_at' => now()->toIso8601String(),
+                    ];
+                }
+            } else {
+                $path = $files->store('uploads/pengajuan', 'public');
+                $berkasBaru[] = [
+                    'file_name' => $files->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_url' => asset('storage/' . $path),
+                    'is_revision' => true,
+                    'uploaded_at' => now()->toIso8601String(),
+                ];
+            }
+        }
+
+        $pengajuan->berkas_persyaratan = array_merge($berkasLama, $berkasBaru);
+        $pengajuan->status = 'Diproses'; // Otomatis kembali diproses oleh BAAK
+        if ($request->filled('catatan_pemohon')) {
+            $pengajuan->catatan_revisi = ($pengajuan->catatan_revisi ? $pengajuan->catatan_revisi . "\n" : '') .
+                "[Respon Mahasiswa: " . $request->input('catatan_pemohon') . "]";
+        }
+        $pengajuan->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Berkas perbaikan berhasil diunggah. Permohonan Anda kini kembali diproses oleh bagian akademik.',
+            'data' => $pengajuan->load('layanan'),
+        ]);
+    }
+
+    /**
      * Statistik ringkasan pengajuan untuk metrik cards.
      */
     public function stats(): JsonResponse

@@ -134,7 +134,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
 export const stats = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +149,7 @@ stats.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
 stats.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ stats.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
 stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -167,7 +167,7 @@ stats.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
 stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -177,7 +177,7 @@ stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
     const statsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -187,7 +187,7 @@ stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
         statsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -196,7 +196,7 @@ stats.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\PengajuanController::stats
- * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @see app/Http/Controllers/Api/PengajuanController.php:249
  * @route '/api/pengajuan/stats'
  */
         statsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -308,6 +308,80 @@ lacak.head = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: str
     
     lacak.form = lacakForm
 /**
+* @see \App\Http\Controllers\Api\PengajuanController::unggahRevisi
+ * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @route '/api/pengajuan/{nomor_pelacakan}/unggah-revisi'
+ */
+export const unggahRevisi = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: unggahRevisi.url(args, options),
+    method: 'post',
+})
+
+unggahRevisi.definition = {
+    methods: ["post"],
+    url: '/api/pengajuan/{nomor_pelacakan}/unggah-revisi',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\Api\PengajuanController::unggahRevisi
+ * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @route '/api/pengajuan/{nomor_pelacakan}/unggah-revisi'
+ */
+unggahRevisi.url = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { nomor_pelacakan: args }
+    }
+
+    
+    if (Array.isArray(args)) {
+        args = {
+                    nomor_pelacakan: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        nomor_pelacakan: args.nomor_pelacakan,
+                }
+
+    return unggahRevisi.definition.url
+            .replace('{nomor_pelacakan}', parsedArgs.nomor_pelacakan.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Api\PengajuanController::unggahRevisi
+ * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @route '/api/pengajuan/{nomor_pelacakan}/unggah-revisi'
+ */
+unggahRevisi.post = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: unggahRevisi.url(args, options),
+    method: 'post',
+})
+
+    /**
+* @see \App\Http\Controllers\Api\PengajuanController::unggahRevisi
+ * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @route '/api/pengajuan/{nomor_pelacakan}/unggah-revisi'
+ */
+    const unggahRevisiForm = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: unggahRevisi.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Api\PengajuanController::unggahRevisi
+ * @see app/Http/Controllers/Api/PengajuanController.php:187
+ * @route '/api/pengajuan/{nomor_pelacakan}/unggah-revisi'
+ */
+        unggahRevisiForm.post = (args: { nomor_pelacakan: string | number } | [nomor_pelacakan: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: unggahRevisi.url(args, options),
+            method: 'post',
+        })
+    
+    unggahRevisi.form = unggahRevisiForm
+/**
 * @see \App\Http\Controllers\Api\PengajuanController::updateStatus
  * @see app/Http/Controllers/Api/PengajuanController.php:153
  * @route '/api/pengajuan/{id}/status'
@@ -391,6 +465,6 @@ updateStatus.put = (args: { id: string | number } | [id: string | number ] | str
         })
     
     updateStatus.form = updateStatusForm
-const PengajuanController = { store, index, stats, lacak, updateStatus }
+const PengajuanController = { store, index, stats, lacak, unggahRevisi, updateStatus }
 
 export default PengajuanController
