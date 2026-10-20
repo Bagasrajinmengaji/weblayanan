@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   IconAlertCircle,
-  IconClock,
   IconPlus,
   IconRefresh,
   IconSearch,
@@ -43,8 +42,20 @@ const statsData = computed(() => {
   return statsResponse.value?.data || {}
 })
 
+const isRefreshing = ref(false)
+
 async function refreshAll() {
-  await Promise.all([refreshLayanan(), refreshStats()])
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await Promise.all([refreshLayanan(), refreshStats()])
+  } catch (err) {
+    console.error("Gagal memuat ulang data:", err)
+  } finally {
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 600)
+  }
 }
 </script>
 
@@ -62,9 +73,17 @@ async function refreshAll() {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" @click="refreshAll" :disabled="loadingLayanan">
-          <IconRefresh class="size-4 mr-1.5" :class="{ 'animate-spin': loadingLayanan }" />
-          Muat Ulang
+        <Button
+          variant="outline"
+          size="sm"
+          @click="refreshAll"
+          :disabled="isRefreshing || loadingLayanan"
+        >
+          <IconRefresh
+            class="size-4 mr-1.5"
+            :class="{ 'animate-spin': isRefreshing || loadingLayanan }"
+          />
+          {{ isRefreshing ? 'Memuat...' : 'Muat Ulang' }}
         </Button>
         <Button variant="secondary" size="sm" as-child>
           <NuxtLink to="/pengajuan/lacak">
@@ -91,17 +110,27 @@ async function refreshAll() {
         <div class="flex-1">
           <h3 class="font-semibold text-base">Gagal memuat data layanan akademik</h3>
           <p class="text-sm text-muted-foreground mt-1">
-            Terjadi kendala saat mengambil daftar layanan. Silakan klik tombol muat ulang di bawah.
+            Terjadi kendala saat mengambil daftar layanan dari server backend. Pastikan server API backend aktif di <code class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">http://localhost:8000</code>.
           </p>
-          <Button variant="outline" size="sm" class="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10" @click="refreshLayanan">
-            Coba Lagi
+          <Button
+            variant="outline"
+            size="sm"
+            class="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10"
+            @click="refreshAll"
+            :disabled="isRefreshing"
+          >
+            <IconRefresh
+              class="size-4 mr-1.5"
+              :class="{ 'animate-spin': isRefreshing }"
+            />
+            {{ isRefreshing ? 'Mencoba...' : 'Coba Lagi' }}
           </Button>
         </div>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-else-if="loadingLayanan" class="px-4 lg:px-6 py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+    <div v-else-if="loadingLayanan && !layananList.length" class="px-4 lg:px-6 py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
       <div class="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       <p class="text-sm font-medium">Memuat daftar layanan akademik...</p>
     </div>

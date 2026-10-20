@@ -57,6 +57,22 @@ const allRiwayat = computed(() => {
   return riwayatResponse.value?.data || []
 })
 
+const isRefreshing = ref(false)
+
+async function handleRefresh() {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
+  try {
+    await refreshRiwayat()
+  } catch (err) {
+    console.error("Gagal menyegarkan riwayat:", err)
+  } finally {
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 600)
+  }
+}
+
 // Filter data di sisi frontend untuk respon instan
 const filteredRiwayat = computed(() => {
   return allRiwayat.value.filter((item: any) => {
@@ -111,9 +127,17 @@ function formatDate(dateStr: string) {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button variant="outline" size="sm" @click="() => refreshRiwayat()" :disabled="isLoading">
-          <IconRefresh class="size-4 mr-1.5" :class="{ 'animate-spin': isLoading }" />
-          Segarkan
+        <Button
+          variant="outline"
+          size="sm"
+          @click="handleRefresh"
+          :disabled="isRefreshing || isLoading"
+        >
+          <IconRefresh
+            class="size-4 mr-1.5"
+            :class="{ 'animate-spin': isRefreshing || isLoading }"
+          />
+          {{ isRefreshing ? 'Menyegarkan...' : 'Segarkan' }}
         </Button>
         <Button size="sm" as-child>
           <NuxtLink to="/pengajuan">
@@ -175,8 +199,18 @@ function formatDate(dateStr: string) {
       <div class="flex-1">
         <h3 class="font-semibold text-base">Gagal memuat riwayat pengajuan</h3>
         <p class="text-sm text-muted-foreground mt-1">{{ errorRiwayat.message }}</p>
-        <Button variant="outline" size="sm" class="mt-3 border-destructive/40 text-destructive" @click="() => refreshRiwayat()">
-          Coba Lagi
+        <Button
+          variant="outline"
+          size="sm"
+          class="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10"
+          @click="handleRefresh"
+          :disabled="isRefreshing"
+        >
+          <IconRefresh
+            class="size-4 mr-1.5"
+            :class="{ 'animate-spin': isRefreshing }"
+          />
+          {{ isRefreshing ? 'Mencoba...' : 'Coba Lagi' }}
         </Button>
       </div>
     </div>
