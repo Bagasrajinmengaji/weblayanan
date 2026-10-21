@@ -7,6 +7,7 @@ import {
   IconHistory,
   IconSearch,
   IconSettings,
+  IconShieldCheck,
 } from "@tabler/icons-vue";
 
 // Menggunakan auto-import Nuxt 3 untuk komponen lokal
@@ -51,6 +52,11 @@ const data = {
     },
   ],
   navSecondary: [
+    {
+      title: "Panel Admin BAAK",
+      url: "/admin",
+      icon: IconShieldCheck,
+    },
     {
       title: "Pengaturan",
       url: "/pengaturan",
