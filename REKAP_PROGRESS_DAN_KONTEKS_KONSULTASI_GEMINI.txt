@@ -132,21 +132,21 @@ B. TAMPILAN & MENU MAHASISWA:
 4. KONFIGURASI AKUN & KREDENSIAL PENGUJIAN
 --------------------------------------------------------------------------------
 A. Akun Administrator BAAK (Manual Username & Password):
-   - Email / Username : admin@student.ac.id
-   - Password         : password123
+   - Email / Username : 
+   - Password         : 
    - Role             : admin
    - Akses Rute       : Otomatis masuk ke /admin
 
 B. Akun Demo Mahasiswa:
-   - Email / Username : mahasiswa@umpku.ac.id
-   - NIM              : 1202407009
-   - Password         : password123
+   - Email / Username : 
+   - NIM              : 
+   - Password         : 
    - Role             : mahasiswa
    - Akses Rute       : Otomatis masuk ke / (Dashboard Mahasiswa)
 
 C. Konfigurasi Google OAuth 2.0 (SSO):
-   - Google Client ID : 680824540632-f4clprt82f0q0cjbc7i0jksjeaj3k7t8.apps.googleusercontent.com
-   - Client Secret    : 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
+   - Google Client ID : 
+   - Client Secret    : 
    - Authorized Origin: http://localhost:3000
    - Alur Integrasi   : Google Identity Services tokenClient pop-up -> verifikasi API Laravel
      (https://www.googleapis.com/oauth2/v3/userinfo) -> Auto-create akun mahasiswa & Sanctum Token.
