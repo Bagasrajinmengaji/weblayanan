@@ -18,19 +18,23 @@ useSeoMeta({
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
 
-// Ambil data layanan dari Laravel API: GET /api/layanan
+// Ambil data layanan secara non-blocking (Lazy) agar warmup & transisi halaman instan
 const {
   data: layananResponse,
-  pending: loadingLayanan,
+  status: statusLayanan,
   error: errorLayanan,
   refresh: refreshLayanan,
-} = await useFetch<any>(`${apiBase}/layanan`)
+} = useLazyFetch<any>(`${apiBase}/layanan`, {
+  default: () => ({ data: [] }),
+})
 
-// Ambil data statistik dari Laravel API: GET /api/pengajuan/stats
+const loadingLayanan = computed(() => statusLayanan.value === "pending")
+
+// Ambil data statistik dari Laravel API secara lazy
 const {
   data: statsResponse,
   refresh: refreshStats,
-} = await useFetch<any>(`${apiBase}/pengajuan/stats`, {
+} = useLazyFetch<any>(`${apiBase}/pengajuan/stats`, {
   default: () => ({ data: {} }),
 })
 
@@ -134,7 +138,7 @@ async function refreshAll() {
 
     <!-- Data Table Layanan -->
     <div v-else>
-      <DataTable :data="layananList" />
+      <LazyDataTable :data="layananList" />
     </div>
   </div>
 </template>

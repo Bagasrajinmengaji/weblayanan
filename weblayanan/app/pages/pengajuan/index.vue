@@ -48,8 +48,10 @@ const router = useRouter()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
 
-// Ambil daftar layanan untuk dropdown opsi
-const { data: layananResponse } = await useFetch<any>(`${apiBase}/layanan`)
+// Ambil daftar layanan untuk dropdown opsi secara lazy (non-blocking)
+const { data: layananResponse } = useLazyFetch<any>(`${apiBase}/layanan`, {
+  default: () => ({ data: [] }),
+})
 const layananList = computed(() => layananResponse.value?.data || [])
 
 // Form state
@@ -649,8 +651,8 @@ async function confirmAndSubmit() {
       </CardContent>
     </Card>
 
-    <!-- Modal Ringkasan Data (Review Dialog) Sebelum Submit -->
-    <Dialog :open="isReviewDialogOpen" @update:open="isReviewDialogOpen = $event">
+    <!-- Modal Ringkasan Data (Review Dialog) Sebelum Submit (Lazy Loaded) -->
+    <LazyDialog v-if="isReviewDialogOpen" :open="isReviewDialogOpen" @update:open="isReviewDialogOpen = $event">
       <DialogContent class="sm:max-w-130">
         <DialogHeader>
           <DialogTitle class="text-lg font-bold flex items-center gap-2">
@@ -740,6 +742,6 @@ async function confirmAndSubmit() {
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </LazyDialog>
   </div>
 </template>

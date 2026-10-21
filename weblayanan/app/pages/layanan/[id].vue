@@ -23,9 +23,11 @@ const apiBase = config.public.apiBase || "http://localhost:8000/api"
 
 const {
   data: layananResponse,
-  pending: isLoading,
+  status: statusLayanan,
   error: errorLayanan,
-} = await useFetch<any>(`${apiBase}/layanan/${route.params.id}`)
+} = useLazyFetch<any>(`${apiBase}/layanan/${route.params.id}`)
+
+const isLoading = computed(() => statusLayanan.value === "pending")
 
 const layanan = computed(() => {
   return layananResponse.value?.data || null
@@ -55,8 +57,14 @@ useSeoMeta({
       </Button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="py-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+      <div class="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <p class="text-sm font-medium">Memuat detail layanan...</p>
+    </div>
+
     <!-- Error State -->
-    <div v-if="errorLayanan || !layanan" class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive flex items-start gap-3">
+    <div v-else-if="errorLayanan || !layanan" class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive flex items-start gap-3">
       <IconAlertCircle class="size-6 shrink-0 mt-0.5" />
       <div>
         <h3 class="font-semibold text-lg">Layanan Tidak Ditemukan</h3>
@@ -69,12 +77,6 @@ useSeoMeta({
           </NuxtLink>
         </Button>
       </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-else-if="isLoading" class="py-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
-      <div class="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      <p class="text-sm font-medium">Memuat detail layanan...</p>
     </div>
 
     <!-- Detail Layanan Content -->

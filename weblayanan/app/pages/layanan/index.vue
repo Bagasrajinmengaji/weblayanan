@@ -28,13 +28,17 @@ const apiBase = config.public.apiBase || "http://localhost:8000/api"
 const searchQuery = ref("")
 const isRefreshing = ref(false)
 
-// Fetch daftar semua layanan
+// Fetch daftar semua layanan secara non-blocking (Lazy)
 const {
   data: layananResponse,
-  pending: isLoading,
+  status: statusLayanan,
   error: errorLayanan,
   refresh: refreshLayanan,
-} = await useFetch<any>(`${apiBase}/layanan`)
+} = useLazyFetch<any>(`${apiBase}/layanan`, {
+  default: () => ({ data: [] }),
+})
+
+const isLoading = computed(() => statusLayanan.value === "pending")
 
 const layananList = computed(() => {
   return (layananResponse.value?.data || []) as any[]

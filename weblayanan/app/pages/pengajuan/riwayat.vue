@@ -45,13 +45,17 @@ const apiBase = config.public.apiBase || "http://localhost:8000/api"
 const searchQuery = ref("")
 const selectedStatus = ref("all")
 
-// Fetch riwayat pengajuan dari API
+// Fetch riwayat pengajuan secara non-blocking (Lazy)
 const {
   data: riwayatResponse,
-  pending: isLoading,
+  status: statusRiwayat,
   error: errorRiwayat,
   refresh: refreshRiwayat,
-} = await useFetch<any>(`${apiBase}/pengajuan/riwayat`)
+} = useLazyFetch<any>(`${apiBase}/pengajuan/riwayat`, {
+  default: () => ({ data: [] }),
+})
+
+const isLoading = computed(() => statusRiwayat.value === "pending")
 
 const allRiwayat = computed(() => {
   return riwayatResponse.value?.data || []
@@ -198,7 +202,7 @@ function formatDate(dateStr: string) {
       <IconAlertCircle class="size-5 shrink-0 mt-0.5" />
       <div class="flex-1">
         <h3 class="font-semibold text-base">Gagal memuat riwayat pengajuan</h3>
-        <p class="text-sm text-muted-foreground mt-1">{{ errorRiwayat.message }}</p>
+        <p class="text-sm text-muted-foreground mt-1">Terjadi kendala saat mengambil data riwayat pengajuan dari server.</p>
         <Button
           variant="outline"
           size="sm"

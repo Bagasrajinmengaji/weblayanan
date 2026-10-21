@@ -24,9 +24,8 @@ const router = useRouter()
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
 
-// Ambil riwayat terbaru untuk notifikasi dinamis
-const { data: riwayatData } = await useFetch<any>(`${apiBase}/pengajuan/riwayat`, {
-  lazy: true,
+// Ambil riwayat terbaru untuk notifikasi dinamis secara lazy tanpa memblokir warmup layout
+const { data: riwayatData } = useLazyFetch<any>(`${apiBase}/pengajuan/riwayat`, {
   default: () => ({ data: [] }),
 })
 
