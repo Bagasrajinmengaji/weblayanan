@@ -22,6 +22,7 @@ import { SidebarTrigger } from "~/components/ui/sidebar"
 
 const router = useRouter()
 const config = useRuntimeConfig()
+const { isAdmin } = useAuth()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
 
 // Ambil riwayat terbaru untuk notifikasi dinamis secara lazy tanpa memblokir warmup layout
@@ -64,7 +65,7 @@ function navigateToLacak(nomor: string) {
         class="mx-2 data-[orientation=vertical]:h-4"
       />
       <h1 class="text-base font-medium">
-        Portal Layanan Mahasiswa
+        {{ isAdmin ? 'Panel Administrator BAAK' : 'Portal Layanan Mahasiswa' }}
       </h1>
       <div class="ml-auto flex items-center gap-2">
         <!-- Notifikasi Dropdown -->

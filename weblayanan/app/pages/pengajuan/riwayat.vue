@@ -34,13 +34,25 @@ import {
   TableRow,
 } from "~/components/ui/table"
 
+definePageMeta({
+  middleware: ["auth"],
+})
+
 useSeoMeta({
   title: "Riwayat Pengajuan Layanan - Portal Mahasiswa",
   description: "Daftar riwayat seluruh permohonan surat administrasi akademik mahasiswa.",
 })
 
+const router = useRouter()
 const config = useRuntimeConfig()
+const { isAdmin } = useAuth()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
+
+onMounted(() => {
+  if (isAdmin.value) {
+    router.replace("/admin")
+  }
+})
 
 const searchQuery = ref("")
 const selectedStatus = ref("all")

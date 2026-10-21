@@ -16,8 +16,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
     })
   }
 
-  // Jika admin membuka halaman mahasiswa, arahkan ke dashboard admin
-  if (isAdmin.value && to.path === "/") {
-    return navigateTo("/admin")
+  // Jika admin membuka halaman pengajuan mahasiswa, arahkan ke dashboard admin
+  if (isAdmin.value) {
+    if (to.path === "/" || to.path === "/pengajuan" || to.path === "/pengajuan/riwayat") {
+      return navigateTo("/admin")
+    }
   }
 })

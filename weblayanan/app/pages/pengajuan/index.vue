@@ -38,6 +38,10 @@ import {
   SelectValue,
 } from "~/components/ui/select"
 
+definePageMeta({
+  middleware: ["auth"],
+})
+
 useSeoMeta({
   title: "Formulir Pengajuan Layanan - Portal Mahasiswa",
   description: "Ajukan permohonan surat administrasi akademik dengan mengunggah berkas persyaratan terstruktur.",
@@ -46,7 +50,14 @@ useSeoMeta({
 const route = useRoute()
 const router = useRouter()
 const config = useRuntimeConfig()
+const { isAdmin } = useAuth()
 const apiBase = config.public.apiBase || "http://localhost:8000/api"
+
+onMounted(() => {
+  if (isAdmin.value) {
+    router.replace("/admin")
+  }
+})
 
 // Ambil daftar layanan untuk dropdown opsi secara lazy (non-blocking)
 const { data: layananResponse } = useLazyFetch<any>(`${apiBase}/layanan`, {

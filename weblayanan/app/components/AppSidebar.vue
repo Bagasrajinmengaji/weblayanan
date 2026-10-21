@@ -5,14 +5,11 @@ import {
   IconFileText,
   IconHelp,
   IconHistory,
-  IconHome,
   IconSearch,
   IconSettings,
   IconShieldCheck,
 } from "@tabler/icons-vue";
 
-// Menggunakan auto-import Nuxt 3 untuk komponen lokal
-// dan alias path ~/components/ui/sidebar untuk Shadcn
 import {
   Sidebar,
   SidebarContent,
@@ -23,14 +20,14 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 
-const { user } = useAuth();
+const { user, isAdmin } = useAuth();
 
 const currentUser = computed(() => {
   if (user.value) {
     return {
       name: user.value.name,
       email: user.value.email,
-      avatar: user.value.avatar || "https://github.com/shadcn.png",
+      avatar: user.value.avatar || (user.value.role === "admin" ? "https://api.dicebear.com/7.x/bottts/svg?seed=admin" : "https://github.com/shadcn.png"),
       role: user.value.role,
     };
   }
@@ -42,68 +39,114 @@ const currentUser = computed(() => {
   };
 });
 
-// Data Menu Khusus Portal Layanan Mahasiswa
-const data = {
-  navMain: [
-    {
-      title: "Dashboard Layanan",
+// Sidebar Data Dinamis (Memisahkan Tampilan Admin vs Mahasiswa)
+const sidebarData = computed(() => {
+  // TAMPILAN KHUSUS ADMIN BAAK (Tanpa menu pengajuan surat mahasiswa)
+  if (isAdmin.value) {
+    return {
+      header: {
+        title: "Panel Administrator",
+        subtitle: "BAAK Kampus",
+        url: "/admin",
+        icon: IconShieldCheck,
+      },
+      navMain: [
+        {
+          title: "Dashboard Verifikasi",
+          url: "/admin",
+          icon: IconShieldCheck,
+        },
+        {
+          title: "Katalog Jenis Layanan",
+          url: "/layanan",
+          icon: IconFileText,
+        },
+        {
+          title: "Cek Status / Lacak",
+          url: "/pengajuan/lacak",
+          icon: IconSearch,
+        },
+      ],
+      documents: [], // Kosong untuk admin
+      navSecondary: [
+        {
+          title: "Pengaturan Sistem",
+          url: "/pengaturan",
+          icon: IconSettings,
+        },
+        {
+          title: "Bantuan & SOP",
+          url: "/bantuan",
+          icon: IconHelp,
+        },
+      ],
+    };
+  }
+
+  // TAMPILAN KHUSUS MAHASISWA & TAMU
+  return {
+    header: {
+      title: "Portal Layanan",
+      subtitle: "Kemahasiswaan",
       url: "/",
-      icon: IconDashboard,
+      icon: IconBuildingBank,
     },
-    {
-      title: "Katalog Semua Layanan",
-      url: "/layanan",
-      icon: IconFileText,
-    },
-    {
-      title: "Cek Status / Lacak",
-      url: "/pengajuan/lacak",
-      icon: IconSearch,
-    },
-    {
-      title: "Riwayat Pengajuan",
-      url: "/pengajuan/riwayat",
-      icon: IconHistory,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Panel Admin BAAK",
-      url: "/admin",
-      icon: IconShieldCheck,
-    },
-    {
-      title: "Pengaturan",
-      url: "/pengaturan",
-      icon: IconSettings,
-    },
-    {
-      title: "Bantuan & FAQ",
-      url: "/bantuan",
-      icon: IconHelp,
-    },
-  ],
-  documents: [
-    {
-      id: 1,
-      name: "Surat Aktif Kuliah",
-      url: "/pengajuan?layanan_id=1",
-      icon: IconFileText,
-    },
-    {
-      id: 2,
-      name: "Pengantar Penelitian",
-      url: "/pengajuan?layanan_id=2",
-      icon: IconFileText,
-    },
-    {
-      id: 3,
-      name: "Legalisir Ijazah",
-      url: "/pengajuan?layanan_id=3",
-      icon: IconFileText,
-    },
-  ],
-};
+    navMain: [
+      {
+        title: "Dashboard Layanan",
+        url: "/",
+        icon: IconDashboard,
+      },
+      {
+        title: "Katalog Semua Layanan",
+        url: "/layanan",
+        icon: IconFileText,
+      },
+      {
+        title: "Cek Status / Lacak",
+        url: "/pengajuan/lacak",
+        icon: IconSearch,
+      },
+      {
+        title: "Riwayat Pengajuan",
+        url: "/pengajuan/riwayat",
+        icon: IconHistory,
+      },
+    ],
+    documents: [
+      {
+        id: 1,
+        name: "Surat Aktif Kuliah",
+        url: "/pengajuan?layanan_id=1",
+        icon: IconFileText,
+      },
+      {
+        id: 2,
+        name: "Pengantar Penelitian",
+        url: "/pengajuan?layanan_id=2",
+        icon: IconFileText,
+      },
+      {
+        id: 3,
+        name: "Legalisir Ijazah",
+        url: "/pengajuan?layanan_id=3",
+        icon: IconFileText,
+      },
+    ],
+    navSecondary: [
+      {
+        title: "Pengaturan",
+        url: "/pengaturan",
+        icon: IconSettings,
+      },
+      {
+        title: "Bantuan & FAQ",
+        url: "/bantuan",
+        icon: IconHelp,
+      },
+    ],
+  };
+});
 </script>
 
 <template>
@@ -115,16 +158,16 @@ const data = {
             as-child
             class="data-[slot=sidebar-menu-button]:p-1.5!"
           >
-            <NuxtLink to="/">
+            <NuxtLink :to="sidebarData.header.url">
               <div
                 class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
               >
-                <IconBuildingBank class="size-5" />
+                <component :is="sidebarData.header.icon" class="size-5" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-bold">Portal Layanan</span>
+                <span class="truncate font-bold">{{ sidebarData.header.title }}</span>
                 <span class="truncate text-xs text-muted-foreground"
-                  >Kemahasiswaan</span
+                  >{{ sidebarData.header.subtitle }}</span
                 >
               </div>
             </NuxtLink>
@@ -135,9 +178,10 @@ const data = {
 
     <SidebarContent>
       <!-- Auto-imported components dari app/components/ -->
-      <Navmain :items="data.navMain" />
-      <NavDocuments :items="data.documents" />
-      <NavSecondary :items="data.navSecondary" class="mt-auto" />
+      <Navmain :items="sidebarData.navMain" />
+      <!-- Dokumen & Permohonan Layanan HANYA untuk Mahasiswa (Disembunyikan dari Admin) -->
+      <NavDocuments v-if="!isAdmin && sidebarData.documents.length > 0" :items="sidebarData.documents" />
+      <NavSecondary :items="sidebarData.navSecondary" class="mt-auto" />
     </SidebarContent>
 
     <SidebarFooter>
