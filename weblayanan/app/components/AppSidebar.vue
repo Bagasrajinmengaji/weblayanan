@@ -5,6 +5,7 @@ import {
   IconFileText,
   IconHelp,
   IconHistory,
+  IconHome,
   IconSearch,
   IconSettings,
   IconShieldCheck,
@@ -46,7 +47,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard Layanan",
-      url: "/",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
@@ -66,6 +67,11 @@ const data = {
     },
   ],
   navSecondary: [
+    {
+      title: "Halaman Depan",
+      url: "/",
+      icon: IconHome,
+    },
     {
       title: "Panel Admin BAAK",
       url: "/admin",
@@ -114,7 +120,7 @@ const data = {
             as-child
             class="data-[slot=sidebar-menu-button]:p-1.5!"
           >
-            <NuxtLink to="/">
+            <NuxtLink to="/dashboard">
               <div
                 class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
               >

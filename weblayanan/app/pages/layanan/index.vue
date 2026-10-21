@@ -76,7 +76,7 @@ async function handleRefresh() {
       <div>
         <div class="flex items-center gap-2">
           <Button variant="ghost" size="sm" as-child class="gap-1.5 -ml-2 text-muted-foreground hover:text-foreground">
-            <NuxtLink to="/">
+            <NuxtLink to="/dashboard">
               <IconArrowLeft class="size-4" />
               Kembali ke Dashboard
             </NuxtLink>
