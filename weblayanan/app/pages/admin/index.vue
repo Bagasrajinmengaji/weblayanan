@@ -442,7 +442,7 @@ function exportToCsv() {
               </div>
 
               <Select v-model="selectedLayanan">
-                <SelectTrigger class="w-[180px] h-8.5 text-xs">
+                <SelectTrigger class="w-45 h-8.5 text-xs">
                   <SelectValue placeholder="Pilih Jenis Layanan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -510,7 +510,7 @@ function exportToCsv() {
                   </TableCell>
 
                   <!-- Jenis Layanan -->
-                  <TableCell class="text-xs font-medium text-foreground max-w-[200px] truncate">
+                  <TableCell class="text-xs font-medium text-foreground max-w-50 truncate">
                     {{ item.layanan?.nama_layanan || '-' }}
                   </TableCell>
 

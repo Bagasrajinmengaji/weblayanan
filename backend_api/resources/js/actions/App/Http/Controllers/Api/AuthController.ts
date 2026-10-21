@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AuthController::login
- * @see app/Http/Controllers/Api/AuthController.php:18
+ * @see app/Http/Controllers/Api/AuthController.php:19
  * @route '/api/auth/login'
  */
 export const login = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ login.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::login
- * @see app/Http/Controllers/Api/AuthController.php:18
+ * @see app/Http/Controllers/Api/AuthController.php:19
  * @route '/api/auth/login'
  */
 login.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ login.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::login
- * @see app/Http/Controllers/Api/AuthController.php:18
+ * @see app/Http/Controllers/Api/AuthController.php:19
  * @route '/api/auth/login'
  */
 login.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ login.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AuthController::login
- * @see app/Http/Controllers/Api/AuthController.php:18
+ * @see app/Http/Controllers/Api/AuthController.php:19
  * @route '/api/auth/login'
  */
     const loginForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ login.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AuthController::login
- * @see app/Http/Controllers/Api/AuthController.php:18
+ * @see app/Http/Controllers/Api/AuthController.php:19
  * @route '/api/auth/login'
  */
         loginForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ login.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     login.form = loginForm
 /**
 * @see \App\Http\Controllers\Api\AuthController::googleLogin
- * @see app/Http/Controllers/Api/AuthController.php:57
+ * @see app/Http/Controllers/Api/AuthController.php:58
  * @route '/api/auth/google'
  */
 export const googleLogin = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -71,7 +71,7 @@ googleLogin.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::googleLogin
- * @see app/Http/Controllers/Api/AuthController.php:57
+ * @see app/Http/Controllers/Api/AuthController.php:58
  * @route '/api/auth/google'
  */
 googleLogin.url = (options?: RouteQueryOptions) => {
@@ -80,7 +80,7 @@ googleLogin.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::googleLogin
- * @see app/Http/Controllers/Api/AuthController.php:57
+ * @see app/Http/Controllers/Api/AuthController.php:58
  * @route '/api/auth/google'
  */
 googleLogin.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -90,7 +90,7 @@ googleLogin.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AuthController::googleLogin
- * @see app/Http/Controllers/Api/AuthController.php:57
+ * @see app/Http/Controllers/Api/AuthController.php:58
  * @route '/api/auth/google'
  */
     const googleLoginForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -100,7 +100,7 @@ googleLogin.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AuthController::googleLogin
- * @see app/Http/Controllers/Api/AuthController.php:57
+ * @see app/Http/Controllers/Api/AuthController.php:58
  * @route '/api/auth/google'
  */
         googleLoginForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -111,7 +111,7 @@ googleLogin.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     googleLogin.form = googleLoginForm
 /**
 * @see \App\Http\Controllers\Api\AuthController::register
- * @see app/Http/Controllers/Api/AuthController.php:145
+ * @see app/Http/Controllers/Api/AuthController.php:164
  * @route '/api/auth/register'
  */
 export const register = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -126,7 +126,7 @@ register.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::register
- * @see app/Http/Controllers/Api/AuthController.php:145
+ * @see app/Http/Controllers/Api/AuthController.php:164
  * @route '/api/auth/register'
  */
 register.url = (options?: RouteQueryOptions) => {
@@ -135,7 +135,7 @@ register.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::register
- * @see app/Http/Controllers/Api/AuthController.php:145
+ * @see app/Http/Controllers/Api/AuthController.php:164
  * @route '/api/auth/register'
  */
 register.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -145,7 +145,7 @@ register.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AuthController::register
- * @see app/Http/Controllers/Api/AuthController.php:145
+ * @see app/Http/Controllers/Api/AuthController.php:164
  * @route '/api/auth/register'
  */
     const registerForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -155,7 +155,7 @@ register.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AuthController::register
- * @see app/Http/Controllers/Api/AuthController.php:145
+ * @see app/Http/Controllers/Api/AuthController.php:164
  * @route '/api/auth/register'
  */
         registerForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -166,7 +166,7 @@ register.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     register.form = registerForm
 /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
 export const me = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -181,7 +181,7 @@ me.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
 me.url = (options?: RouteQueryOptions) => {
@@ -190,7 +190,7 @@ me.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
 me.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -199,7 +199,7 @@ me.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
 me.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -209,7 +209,7 @@ me.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
     const meForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ me.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
         meForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -228,7 +228,7 @@ me.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AuthController::me
- * @see app/Http/Controllers/Api/AuthController.php:183
+ * @see app/Http/Controllers/Api/AuthController.php:202
  * @route '/api/auth/me'
  */
         meForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -244,7 +244,7 @@ me.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     me.form = meForm
 /**
 * @see \App\Http\Controllers\Api\AuthController::logout
- * @see app/Http/Controllers/Api/AuthController.php:210
+ * @see app/Http/Controllers/Api/AuthController.php:229
  * @route '/api/auth/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -259,7 +259,7 @@ logout.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::logout
- * @see app/Http/Controllers/Api/AuthController.php:210
+ * @see app/Http/Controllers/Api/AuthController.php:229
  * @route '/api/auth/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -268,7 +268,7 @@ logout.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AuthController::logout
- * @see app/Http/Controllers/Api/AuthController.php:210
+ * @see app/Http/Controllers/Api/AuthController.php:229
  * @route '/api/auth/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -278,7 +278,7 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AuthController::logout
- * @see app/Http/Controllers/Api/AuthController.php:210
+ * @see app/Http/Controllers/Api/AuthController.php:229
  * @route '/api/auth/logout'
  */
     const logoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -288,7 +288,7 @@ logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AuthController::logout
- * @see app/Http/Controllers/Api/AuthController.php:210
+ * @see app/Http/Controllers/Api/AuthController.php:229
  * @route '/api/auth/logout'
  */
         logoutForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

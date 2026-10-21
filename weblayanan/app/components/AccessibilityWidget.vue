@@ -144,7 +144,7 @@ function handleKeydown(e: KeyboardEvent) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="a11y-title"
-      class="fixed bottom-20 right-5 w-[330px] sm:w-[360px] rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl p-5 text-foreground transition-all duration-200 animate-in fade-in zoom-in-95"
+      class="fixed bottom-20 right-5 w-82.5 sm:w-90 rounded-2xl border border-border bg-card/95 backdrop-blur-md shadow-2xl p-5 text-foreground transition-all duration-200 animate-in fade-in zoom-in-95"
     >
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-border/80">

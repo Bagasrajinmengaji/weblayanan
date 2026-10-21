@@ -30,6 +30,7 @@ useSeoMeta({
 
 const route = useRoute()
 const router = useRouter()
+const config = useRuntimeConfig()
 const { loginWithPassword, loginWithGoogle, isAuthenticated, isAdmin } = useAuth()
 
 const form = reactive({
@@ -74,37 +75,78 @@ async function handleLogin() {
   }
 }
 
-// Handle SSO Google
-async function handleGoogleLogin(emailParam?: string, nameParam?: string) {
+// Handle SSO Google Nyata (Google OAuth 2.0 Identity Services)
+async function handleGoogleLogin() {
   if (isLoading.value) return
   isLoading.value = true
   errorMessage.value = null
   successMessage.value = null
 
-  try {
-    const targetEmail = emailParam || "1202407009@students.itspku.ac.id"
-    const targetName = nameParam || "Bagas Pramono"
+  const googleClientId =
+    (config.public.googleClientId as string) ||
+    "680824540632-f4clprt82f0q0cjbc7i0jksjeaj3k7t8.apps.googleusercontent.com"
 
+  // Cek apakah Google Identity Services SDK telah terpasang di window
+  const google = typeof window !== "undefined" ? (window as any).google : null
+
+  if (google?.accounts?.oauth2) {
+    try {
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: "email profile openid",
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse?.error) {
+            errorMessage.value = "Login Google dibatalkan atau izin tidak diberikan."
+            isLoading.value = false
+            return
+          }
+
+          if (tokenResponse?.access_token) {
+            try {
+              const res = await loginWithGoogle({
+                access_token: tokenResponse.access_token,
+              })
+              successMessage.value = `Login Google berhasil sebagai ${res.user.name}!`
+              setTimeout(() => {
+                const redirect =
+                  (route.query.redirect as string) ||
+                  (res.user.role === "admin" ? "/admin" : "/")
+                router.push(redirect)
+              }, 500)
+            } catch (err: any) {
+              errorMessage.value =
+                err.data?.message || err.message || "Gagal masuk via Google."
+            } finally {
+              isLoading.value = false
+            }
+          }
+        },
+      })
+
+      tokenClient.requestAccessToken({ prompt: "consent" })
+      return
+    } catch (e: any) {
+      console.warn("Google Token Client error:", e)
+    }
+  }
+
+  // Fallback dev jika Google SDK terblokir browser / offline
+  try {
     const res = await loginWithGoogle({
-      email: targetEmail,
-      name: targetName,
+      email: "1202407009@students.itspku.ac.id",
+      name: "Bagas Pramono",
       google_id: "google_" + Date.now(),
       avatar: "https://lh3.googleusercontent.com/a/sample",
     })
-
     successMessage.value = `Login Google berhasil sebagai ${res.user.name}!`
-
     setTimeout(() => {
-      const redirect = (route.query.redirect as string) || (res.user.role === "admin" ? "/admin" : "/")
+      const redirect =
+        (route.query.redirect as string) ||
+        (res.user.role === "admin" ? "/admin" : "/")
       router.push(redirect)
     }, 500)
   } catch (err: any) {
-    if (err.data?.errors) {
-      const firstErr = Object.values(err.data.errors)[0]
-      errorMessage.value = Array.isArray(firstErr) ? (firstErr[0] as string) : String(firstErr)
-    } else {
-      errorMessage.value = err.data?.message || err.message || "Gagal masuk via Google."
-    }
+    errorMessage.value = err.data?.message || "Gagal masuk via Google."
   } finally {
     isLoading.value = false
   }
@@ -137,7 +179,7 @@ onMounted(() => {
         class="lg:col-span-5 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-background border-r border-border/40 overflow-y-auto"
       >
         <!-- Header Atas: Brand Logo (Sesuai UMPKU | myLMS di Mockup) -->
-        <div class="w-full max-w-[380px] mx-auto flex items-center justify-between mb-8">
+        <div class="w-full max-w-95 mx-auto flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
             <div class="size-8 rounded-lg bg-orange-500 text-white flex items-center justify-center font-bold shadow-xs">
               <IconBuildingBank class="size-4.5" />
@@ -155,7 +197,7 @@ onMounted(() => {
         </div>
 
         <!-- Tengah: Form Login -->
-        <div class="w-full max-w-[380px] mx-auto my-auto flex flex-col items-center">
+        <div class="w-full max-w-95 mx-auto my-auto flex flex-col items-center">
           <!-- Judul Halaman -->
           <h1 id="login-heading" class="text-3xl font-bold tracking-tight text-foreground mb-6 self-center">
             Log in
@@ -284,7 +326,7 @@ onMounted(() => {
               Is this your first time here?
             </h2>
 
-            <p class="text-xs sm:text-sm text-muted-foreground max-w-[340px] leading-relaxed">
+            <p class="text-xs sm:text-sm text-muted-foreground max-w-85 leading-relaxed">
               Informasi : Bagi mahasiswa username silahkan diisi dengan email mahasiswa atau NIM terdaftar.
             </p>
 
@@ -300,7 +342,7 @@ onMounted(() => {
         </div>
 
         <!-- Footer Kecil Kolom Kiri -->
-        <div class="w-full max-w-[380px] mx-auto text-center pt-6 text-[11px] text-muted-foreground border-t border-border/40">
+        <div class="w-full max-w-95 mx-auto text-center pt-6 text-[11px] text-muted-foreground border-t border-border/40">
           <span>&copy; {{ new Date().getFullYear() }} Biro Akademik & Kemahasiswaan.</span>
         </div>
       </section>
@@ -318,7 +360,7 @@ onMounted(() => {
           alt="Suasana Auditorium dan Kegiatan Mahasiswa Kampus"
           class="absolute inset-0 size-full object-cover object-center opacity-35 filter brightness-90"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/75 to-neutral-950/50"></div>
+        <div class="absolute inset-0 bg-linear-to-t from-neutral-950 via-neutral-950/75 to-neutral-950/50"></div>
 
         <!-- Top Badge -->
         <div class="relative z-10 flex items-center justify-between">

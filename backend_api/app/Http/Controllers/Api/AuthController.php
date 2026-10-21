@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -61,8 +62,26 @@ class AuthController extends Controller
         $googleId = null;
         $avatar = null;
 
-        // Mendukung Google Identity Services JWT credential
-        if ($request->filled('credential')) {
+        // 1. Mendukung Google OAuth2 access_token
+        if ($request->filled('access_token')) {
+            try {
+                $googleRes = Http::withToken($request->input('access_token'))
+                    ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+                if ($googleRes->successful()) {
+                    $userData = $googleRes->json();
+                    $email = $userData['email'] ?? null;
+                    $name = $userData['name'] ?? null;
+                    $googleId = $userData['sub'] ?? null;
+                    $avatar = $userData['picture'] ?? null;
+                }
+            } catch (\Exception $e) {
+                // Lanjutkan ke metode lain
+            }
+        }
+
+        // 2. Mendukung Google Identity Services JWT credential (id_token)
+        if (! $email && $request->filled('credential')) {
             $credential = $request->input('credential');
             $parts = explode('.', $credential);
             if (count($parts) >= 2) {
@@ -76,7 +95,7 @@ class AuthController extends Controller
             }
         }
 
-        // Fallback jika dikirim objek langsung
+        // 3. Fallback jika dikirim objek profil langsung
         if (! $email && $request->filled('email')) {
             $email = $request->input('email');
             $name = $request->input('name', explode('@', $email)[0]);

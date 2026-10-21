@@ -72,6 +72,7 @@ export function useAuth() {
 
   // Login dengan Google SSO (Mahasiswa)
   async function loginWithGoogle(payload: {
+    access_token?: string
     credential?: string
     email?: string
     name?: string
