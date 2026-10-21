@@ -1,64 +1,58 @@
 <script setup lang="ts">
 import {
-  IconAlertCircle,
+  IconArrowRight,
+  IconChecklist,
+  IconFileText,
+  IconHelp,
   IconPlus,
   IconRefresh,
   IconSearch,
-} from "@tabler/icons-vue"
+} from "@tabler/icons-vue";
 
-import DataTable from "~/components/DataTable.vue"
-import SectionCards from "~/components/SectionCards.vue"
-import { Button } from "~/components/ui/button"
+import SectionCards from "~/components/SectionCards.vue";
+import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 useSeoMeta({
   title: "Dashboard Layanan Mahasiswa - Portal Akademik",
-  description: "Daftar layanan administrasi persuratan dan pengajuan berkas akademik mahasiswa secara online.",
-})
+  description:
+    "Portal layanan administrasi persuratan dan pengajuan berkas akademik mahasiswa secara online.",
+});
 
-const config = useRuntimeConfig()
-const apiBase = config.public.apiBase || "http://localhost:8000/api"
-
-// Ambil data layanan secara non-blocking (Lazy) agar warmup & transisi halaman instan
-const {
-  data: layananResponse,
-  status: statusLayanan,
-  error: errorLayanan,
-  refresh: refreshLayanan,
-} = useLazyFetch<any>(`${apiBase}/layanan`, {
-  default: () => ({ data: [] }),
-})
-
-const loadingLayanan = computed(() => statusLayanan.value === "pending")
+const config = useRuntimeConfig();
+const apiBase = config.public.apiBase || "http://localhost:8000/api";
 
 // Ambil data statistik dari Laravel API secara lazy
-const {
-  data: statsResponse,
-  refresh: refreshStats,
-} = useLazyFetch<any>(`${apiBase}/pengajuan/stats`, {
-  default: () => ({ data: {} }),
-})
-
-const layananList = computed(() => {
-  return layananResponse.value?.data || []
-})
+const { data: statsResponse, refresh: refreshStats } = useLazyFetch<any>(
+  `${apiBase}/pengajuan/stats`,
+  {
+    default: () => ({ data: {} }),
+  },
+);
 
 const statsData = computed(() => {
-  return statsResponse.value?.data || {}
-})
+  return statsResponse.value?.data || {};
+});
 
-const isRefreshing = ref(false)
+const isRefreshing = ref(false);
 
 async function refreshAll() {
-  if (isRefreshing.value) return
-  isRefreshing.value = true
+  if (isRefreshing.value) return;
+  isRefreshing.value = true;
   try {
-    await Promise.all([refreshLayanan(), refreshStats()])
+    await refreshStats();
   } catch (err) {
-    console.error("Gagal memuat ulang data:", err)
+    console.error("Gagal memuat ulang data statistik:", err);
   } finally {
     setTimeout(() => {
-      isRefreshing.value = false
-    }, 600)
+      isRefreshing.value = false;
+    }, 600);
   }
 }
 </script>
@@ -66,14 +60,15 @@ async function refreshAll() {
 <template>
   <div class="flex flex-col gap-6 min-w-0 max-w-full overflow-x-hidden">
     <!-- Header Bagian Atas -->
-    <div class="flex flex-col justify-between gap-4 px-4 sm:flex-row sm:items-center lg:px-6">
+    <div
+      class="flex flex-col justify-between gap-4 px-4 sm:flex-row sm:items-center lg:px-6"
+    >
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1
+          class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+        >
           Portal Layanan Mahasiswa
         </h1>
-        <p class="text-sm text-muted-foreground mt-1">
-          Ajukan permohonan surat akademik, riset, dan legalisir dokumen secara mandiri dan cepat.
-        </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
@@ -81,13 +76,13 @@ async function refreshAll() {
           variant="outline"
           size="sm"
           @click="refreshAll"
-          :disabled="isRefreshing || loadingLayanan"
+          :disabled="isRefreshing"
         >
           <IconRefresh
             class="size-4 mr-1.5"
-            :class="{ 'animate-spin': isRefreshing || loadingLayanan }"
+            :class="{ 'animate-spin': isRefreshing }"
           />
-          {{ isRefreshing ? 'Memuat...' : 'Muat Ulang' }}
+          {{ isRefreshing ? "Memuat..." : "Muat Ulang" }}
         </Button>
         <Button variant="secondary" size="sm" as-child>
           <NuxtLink to="/pengajuan/lacak">
@@ -107,38 +102,63 @@ async function refreshAll() {
     <!-- Metrik Statistik Cards -->
     <SectionCards :stats="statsData" />
 
-    <!-- Error State -->
-    <div v-if="errorLayanan" class="px-4 lg:px-6">
-      <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <IconAlertCircle class="size-5 shrink-0" />
-          <p class="text-sm font-medium">Gagal memuat layanan akademik.</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          class="border-destructive/40 text-destructive hover:bg-destructive/10 h-8 text-xs shrink-0 self-start sm:self-auto"
-          @click="refreshAll"
-          :disabled="isRefreshing"
-        >
-          <IconRefresh
-            class="size-3.5 mr-1.5"
-            :class="{ 'animate-spin': isRefreshing }"
-          />
-          {{ isRefreshing ? 'Mencoba...' : 'Coba Lagi' }}
-        </Button>
-      </div>
-    </div>
+    <!-- Panduan Alur (Clean Look) -->
+    <div class="px-4 lg:px-6">
+      <!-- Card Panduan Alur Pengajuan -->
+      <Card class="w-full border shadow-xs">
+        <CardHeader>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle class="text-lg font-semibold">Alur Layanan Persuratan Mandiri</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" as-child class="hidden sm:flex text-primary hover:text-primary">
+              <NuxtLink to="/layanan" class="gap-1.5">
+                Katalog Layanan
+                <IconArrowRight class="size-4" />
+              </NuxtLink>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="rounded-lg border bg-muted/40 p-4 flex flex-col justify-between gap-3">
+              <div class="size-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+                1
+              </div>
+              <div>
+                <h4 class="font-semibold text-sm text-foreground">Pilih Layanan</h4>
+                <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Tentukan jenis surat atau permohonan yang dibutuhkan dari katalog akademik.
+                </p>
+              </div>
+            </div>
 
-    <!-- Loading State -->
-    <div v-else-if="loadingLayanan && !layananList.length" class="px-4 lg:px-6 py-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
-      <div class="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      <p class="text-sm font-medium">Memuat daftar layanan akademik...</p>
-    </div>
+            <div class="rounded-lg border bg-muted/40 p-4 flex flex-col justify-between gap-3">
+              <div class="size-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+                2
+              </div>
+              <div>
+                <h4 class="font-semibold text-sm text-foreground">Isi & Kirim Berkas</h4>
+                <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Lengkapi identitas mahasiswa dan lampirkan scan berkas persyaratan online.
+                </p>
+              </div>
+            </div>
 
-    <!-- Data Table Layanan -->
-    <div v-else>
-      <LazyDataTable :data="layananList" />
+            <div class="rounded-lg border bg-muted/40 p-4 flex flex-col justify-between gap-3">
+              <div class="size-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
+                3
+              </div>
+              <div>
+                <h4 class="font-semibold text-sm text-foreground">Lacak & Ambil</h4>
+                <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Gunakan nomor pelacakan unik untuk memantau proses verifikasi secara real-time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>

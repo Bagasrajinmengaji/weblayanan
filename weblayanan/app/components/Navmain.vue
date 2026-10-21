@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Component } from "vue";
-import { IconCirclePlusFilled } from "@tabler/icons-vue";
 
 import {
   SidebarGroup,
@@ -26,22 +25,6 @@ const route = useRoute();
 <template>
   <SidebarGroup>
     <SidebarGroupContent class="flex flex-col gap-2">
-      <!-- Tombol Ajukan Surat Cepat -->
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            as-child
-            tooltip="Ajukan Surat Baru"
-            class="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground duration-200 ease-linear shadow-xs"
-          >
-            <NuxtLink to="/pengajuan">
-              <IconCirclePlusFilled class="size-4 shrink-0" />
-              <span class="font-medium">Ajukan Surat Baru</span>
-            </NuxtLink>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-
       <!-- Daftar Menu Utama -->
       <SidebarMenu>
         <SidebarMenuItem v-for="item in items" :key="item.title">

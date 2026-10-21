@@ -653,26 +653,26 @@ async function confirmAndSubmit() {
 
     <!-- Modal Ringkasan Data (Review Dialog) Sebelum Submit (Lazy Loaded) -->
     <LazyDialog v-if="isReviewDialogOpen" :open="isReviewDialogOpen" @update:open="isReviewDialogOpen = $event">
-      <DialogContent class="sm:max-w-130">
-        <DialogHeader>
-          <DialogTitle class="text-lg font-bold flex items-center gap-2">
+      <DialogContent class="sm:max-w-lg max-h-[85vh] p-5 sm:p-6 flex flex-col gap-3">
+        <DialogHeader class="shrink-0 space-y-1">
+          <DialogTitle class="text-base sm:text-lg font-bold flex items-center gap-2">
             <IconFileCheck class="size-5 text-primary" />
             Konfirmasi Data Pengajuan
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription class="text-xs text-muted-foreground">
             Mohon periksa kembali kelengkapan identitas dan berkas lampiran sebelum berkas diproses ke bagian akademik.
           </DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2 text-sm">
+        <div class="space-y-3 py-1 text-sm overflow-y-auto pr-1.5 flex-1 min-h-0">
           <!-- Ringkasan Identitas -->
-          <div class="rounded-lg border bg-muted/40 p-3.5 space-y-2">
-            <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b pb-1">
+          <div class="rounded-lg border bg-muted/40 p-3 space-y-1.5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b pb-1">
               Identitas Pemohon
             </div>
-            <div class="grid grid-cols-3 gap-1 text-xs">
+            <div class="grid grid-cols-3 gap-y-1 gap-x-2 text-xs">
               <span class="text-muted-foreground">Nama:</span>
-              <span class="col-span-2 font-medium text-foreground">{{ form.nama_mahasiswa }}</span>
+              <span class="col-span-2 font-medium text-foreground truncate">{{ form.nama_mahasiswa }}</span>
               <span class="text-muted-foreground">NIM:</span>
               <span class="col-span-2 font-mono font-medium text-foreground">{{ form.nim }}</span>
               <span class="text-muted-foreground">Layanan:</span>
@@ -680,22 +680,22 @@ async function confirmAndSubmit() {
               <span class="text-muted-foreground">WhatsApp:</span>
               <span class="col-span-2 font-medium text-foreground">{{ form.no_hp }}</span>
               <span class="text-muted-foreground">Email:</span>
-              <span class="col-span-2 font-medium text-foreground">{{ form.email }}</span>
+              <span class="col-span-2 font-medium text-foreground truncate">{{ form.email }}</span>
             </div>
           </div>
 
           <!-- Ringkasan Berkas Terlampir -->
-          <div class="rounded-lg border p-3.5 space-y-2">
+          <div class="rounded-lg border p-3 space-y-2">
             <div class="flex items-center justify-between border-b pb-1">
-              <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Berkas Terlampir
               </span>
-              <Badge variant="secondary" class="text-[10px]">
+              <Badge variant="secondary" class="text-[10px] px-1.5 py-0 h-5">
                 {{ uploadedFilesSummary.length }} Dokumen
               </Badge>
             </div>
 
-            <div v-if="uploadedFilesSummary.length > 0" class="space-y-1.5 pt-1">
+            <div v-if="uploadedFilesSummary.length > 0" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
               <div
                 v-for="item in uploadedFilesSummary"
                 :key="item.slotIndex"
@@ -720,24 +720,25 @@ async function confirmAndSubmit() {
           </div>
 
           <!-- Catatan Tambahan Jika Ada -->
-          <div v-if="form.catatan" class="rounded-lg border p-3 text-xs bg-muted/20">
+          <div v-if="form.catatan" class="rounded-lg border p-2.5 text-xs bg-muted/20">
             <span class="font-semibold text-muted-foreground">Catatan Tambahan:</span>
             <p class="mt-0.5 text-foreground italic">{{ form.catatan }}</p>
           </div>
         </div>
 
-        <DialogFooter class="gap-2 sm:gap-0">
-          <Button variant="outline" type="button" @click="isReviewDialogOpen = false">
+        <DialogFooter class="shrink-0 pt-2 border-t flex flex-col-reverse sm:flex-row gap-2 sm:gap-2">
+          <Button variant="outline" size="sm" type="button" @click="isReviewDialogOpen = false">
             Perbaiki Data
           </Button>
           <Button
             type="button"
-            class="gap-1.5"
+            size="sm"
+            class="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
             :disabled="isSubmitting"
             @click="confirmAndSubmit"
           >
-            <span v-if="isSubmitting" class="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
-            <IconSend v-else class="size-4" />
+            <span v-if="isSubmitting" class="size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+            <IconSend v-else class="size-3.5" />
             <span>{{ isSubmitting ? 'Mengirim...' : 'Kirim Sekarang' }}</span>
           </Button>
         </DialogFooter>
