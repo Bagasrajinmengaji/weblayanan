@@ -47,7 +47,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard Layanan",
-      url: "/dashboard",
+      url: "/",
       icon: IconDashboard,
     },
     {
@@ -67,11 +67,6 @@ const data = {
     },
   ],
   navSecondary: [
-    {
-      title: "Halaman Depan",
-      url: "/",
-      icon: IconHome,
-    },
     {
       title: "Panel Admin BAAK",
       url: "/admin",
@@ -120,7 +115,7 @@ const data = {
             as-child
             class="data-[slot=sidebar-menu-button]:p-1.5!"
           >
-            <NuxtLink to="/dashboard">
+            <NuxtLink to="/">
               <div
                 class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
               >

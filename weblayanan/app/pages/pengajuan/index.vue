@@ -279,7 +279,7 @@ async function confirmAndSubmit() {
     <!-- Tombol Kembali & Breadcrumb -->
     <div class="flex items-center gap-3">
       <Button variant="ghost" size="sm" as-child class="gap-1.5 -ml-2 text-muted-foreground hover:text-foreground">
-        <NuxtLink to="/dashboard">
+        <NuxtLink to="/">
           <IconArrowLeft class="size-4" />
           Kembali ke Dashboard
         </NuxtLink>
@@ -640,7 +640,7 @@ async function confirmAndSubmit() {
           <!-- Tombol Aksi Form -->
           <div class="flex items-center justify-between pt-4 border-t">
             <Button variant="outline" type="button" as-child>
-              <NuxtLink to="/dashboard">Batal</NuxtLink>
+              <NuxtLink to="/">Batal</NuxtLink>
             </Button>
             <Button type="submit" class="gap-2 min-w-36">
               <IconEye class="size-4" />

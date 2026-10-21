@@ -124,3 +124,40 @@
     max-width: 100vw;
   }
 }
+
+/* Accessibility (A11y) Modes */
+html.a11y-font-large {
+  font-size: 115% !important;
+}
+
+html.a11y-font-xlarge {
+  font-size: 130% !important;
+}
+
+html.a11y-high-contrast {
+  filter: contrast(135%);
+}
+
+html.a11y-high-contrast * {
+  border-color: currentColor !important;
+}
+
+html.a11y-underline-links a,
+html.a11y-underline-links button {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+html.a11y-readable-font,
+html.a11y-readable-font * {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+  letter-spacing: 0.035em !important;
+}
+
+html.a11y-reduce-motion,
+html.a11y-reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
