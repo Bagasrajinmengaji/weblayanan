@@ -22,13 +22,27 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 
+const { user } = useAuth();
+
+const currentUser = computed(() => {
+  if (user.value) {
+    return {
+      name: user.value.name,
+      email: user.value.email,
+      avatar: user.value.avatar || "https://github.com/shadcn.png",
+      role: user.value.role,
+    };
+  }
+  return {
+    name: "Tamu / Belum Masuk",
+    email: "Klik untuk masuk",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=guest",
+    role: "guest",
+  };
+});
+
 // Data Menu Khusus Portal Layanan Mahasiswa
 const data = {
-  user: {
-    name: "Bagas Pramono",
-    email: "mahasiswa@umpku.ac.id",
-    avatar: "https://github.com/shadcn.png",
-  },
   navMain: [
     {
       title: "Dashboard Layanan",
@@ -126,7 +140,7 @@ const data = {
     </SidebarContent>
 
     <SidebarFooter>
-      <NavUser :user="data.user" />
+      <NavUser :user="currentUser" />
     </SidebarFooter>
   </Sidebar>
 </template>

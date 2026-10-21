@@ -3,8 +3,11 @@ import {
   IconAlertTriangle,
   IconCreditCard,
   IconDotsVertical,
+  IconLogin,
   IconLogout,
   IconNotification,
+  IconShieldCheck,
+  IconUser,
   IconUserCircle,
 } from "@tabler/icons-vue"
 
@@ -13,6 +16,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "~/components/ui/avatar"
+import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import {
   Dialog,
@@ -38,18 +42,20 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar"
 
-interface User {
+interface UserData {
   name: string
   email: string
   avatar: string
+  role?: string
 }
 
 defineProps<{
-  user: User
+  user: UserData
 }>()
 
 const router = useRouter()
 const { isMobile } = useSidebar()
+const { logout: authLogout, isAuthenticated, isAdmin } = useAuth()
 
 // Dialog konfirmasi logout state
 const isLogoutDialogOpen = ref(false)
@@ -62,20 +68,10 @@ function openLogoutDialog() {
 async function confirmLogout() {
   isLoggingOut.value = true
   try {
-    // 1. Bersihkan seluruh penyimpanan client
-    if (import.meta.client) {
-      localStorage.removeItem("auth_token")
-      localStorage.removeItem("user_data")
-      localStorage.removeItem("token")
-      sessionStorage.clear()
-    }
-
-    // 2. Beri sedikit jeda animasi
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
+    await authLogout()
+    await new Promise((resolve) => setTimeout(resolve, 400))
     isLogoutDialogOpen.value = false
 
-    // 3. Arahkan ke halaman utama beranda
     if (import.meta.client) {
       window.location.href = "/"
     } else {
@@ -90,26 +86,51 @@ async function confirmLogout() {
 <template>
   <div>
     <SidebarMenu>
-      <SidebarMenuItem>
+      <!-- STATE 1: BELUM LOGIN -->
+      <SidebarMenuItem v-if="!isAuthenticated">
+        <SidebarMenuButton
+          as-child
+          size="lg"
+          class="border border-border/70 bg-card hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer rounded-lg"
+        >
+          <NuxtLink to="/login" class="flex items-center gap-2.5 w-full">
+            <div class="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+              <IconLogin class="size-4" />
+            </div>
+            <div class="grid flex-1 text-left text-sm leading-tight min-w-0">
+              <span class="truncate font-semibold text-foreground">Masuk / Login</span>
+              <span class="text-muted-foreground truncate text-xs">SSO Google / Petugas</span>
+            </div>
+          </NuxtLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <!-- STATE 2: SUDAH LOGIN -->
+      <SidebarMenuItem v-else>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <SidebarMenuButton
               size="lg"
               class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar class="h-8 w-8 rounded-lg grayscale">
+              <Avatar class="h-8 w-8 rounded-lg">
                 <AvatarImage :src="user.avatar" :alt="user.name" />
-                <AvatarFallback class="rounded-lg">
-                  MHS
+                <AvatarFallback class="rounded-lg bg-primary/10 text-primary text-xs font-bold">
+                  {{ user.name.slice(0, 2).toUpperCase() }}
                 </AvatarFallback>
               </Avatar>
-              <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-medium">{{ user.name }}</span>
+              <div class="grid flex-1 text-left text-sm leading-tight min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="truncate font-medium">{{ user.name }}</span>
+                  <Badge v-if="isAdmin" variant="outline" class="text-[9px] px-1 py-0 h-4 border-primary/30 text-primary">
+                    BAAK
+                  </Badge>
+                </div>
                 <span class="text-muted-foreground truncate text-xs">
                   {{ user.email }}
                 </span>
               </div>
-              <IconDotsVertical class="ml-auto size-4" />
+              <IconDotsVertical class="ml-auto size-4 shrink-0" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -122,8 +143,8 @@ async function confirmLogout() {
               <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar class="h-8 w-8 rounded-lg">
                   <AvatarImage :src="user.avatar" :alt="user.name" />
-                  <AvatarFallback class="rounded-lg">
-                    MHS
+                  <AvatarFallback class="rounded-lg bg-primary/10 text-primary text-xs font-bold">
+                    {{ user.name.slice(0, 2).toUpperCase() }}
                   </AvatarFallback>
                 </Avatar>
                 <div class="grid flex-1 text-left text-sm leading-tight">
@@ -136,6 +157,12 @@ async function confirmLogout() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem v-if="isAdmin" as-child class="cursor-pointer">
+                <NuxtLink to="/admin" class="flex items-center w-full font-semibold text-primary">
+                  <IconShieldCheck class="mr-2 h-4 w-4" />
+                  <span>Panel Verifikasi BAAK</span>
+                </NuxtLink>
+              </DropdownMenuItem>
               <DropdownMenuItem as-child class="cursor-pointer">
                 <NuxtLink to="/pengaturan" class="flex items-center w-full">
                   <IconUserCircle class="mr-2 h-4 w-4" />
@@ -145,13 +172,13 @@ async function confirmLogout() {
               <DropdownMenuItem as-child class="cursor-pointer">
                 <NuxtLink to="/pengajuan/riwayat" class="flex items-center w-full">
                   <IconCreditCard class="mr-2 h-4 w-4" />
-                  <span>Riwayat Pengajuan</span>
+                  <span>Riwayat Pengajuan Saya</span>
                 </NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuItem as-child class="cursor-pointer">
                 <NuxtLink to="/pengajuan/lacak" class="flex items-center w-full">
                   <IconNotification class="mr-2 h-4 w-4" />
-                  <span>Lacak Berkas</span>
+                  <span>Lacak Berkas Pengajuan</span>
                 </NuxtLink>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -179,7 +206,7 @@ async function confirmLogout() {
             Konfirmasi Keluar Sesi
           </DialogTitle>
           <DialogDescription class="text-sm text-muted-foreground">
-            Apakah Anda yakin ingin keluar dari portal layanan mahasiswa? Sesi aktif Anda pada perangkat ini akan diakhiri.
+            Apakah Anda yakin ingin keluar dari portal layanan akademik? Sesi aktif Anda pada perangkat ini akan diakhiri.
           </DialogDescription>
         </DialogHeader>
 

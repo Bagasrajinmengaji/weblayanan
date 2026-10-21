@@ -53,6 +53,10 @@ import {
   TableRow,
 } from "~/components/ui/table"
 
+definePageMeta({
+  middleware: "admin",
+})
+
 useSeoMeta({
   title: "Panel Admin BAAK - Verifikasi Pengajuan Surat Mahasiswa",
   description: "Dashboard tata usaha & administrasi akademik untuk verifikasi, revisi, dan penerbitan surat mahasiswa.",

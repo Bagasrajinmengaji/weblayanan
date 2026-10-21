@@ -15,13 +15,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::firstOrCreate(
+        // Admin Account
+        User::updateOrCreate(
             ['email' => 'admin@student.ac.id'],
             [
-                'name' => 'Administrator Portal',
-                'password' => bcrypt('password'),
+                'name' => 'Administrator BAAK',
+                'role' => 'admin',
+                'password' => bcrypt('password123'),
+                'avatar' => 'https://api.dicebear.com/7.x/bottts/svg?seed=admin',
+            ]
+        );
+
+        // Demo Mahasiswa Account
+        User::updateOrCreate(
+            ['email' => 'mahasiswa@umpku.ac.id'],
+            [
+                'name' => 'Bagas Pramono',
+                'role' => 'mahasiswa',
+                'nim' => '1202407009',
+                'password' => bcrypt('password123'),
+                'avatar' => 'https://github.com/shadcn.png',
             ]
         );
 

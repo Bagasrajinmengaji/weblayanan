@@ -1,8 +1,21 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LayananController;
 use App\Http\Controllers\Api\PengajuanController;
 use Illuminate\Support\Facades\Route;
+
+// Endpoint Autentikasi (Admin & Mahasiswa SSO Google)
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/google', [AuthController::class, 'googleLogin']);
+    Route::post('/register', [AuthController::class, 'register']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
 
 Route::get('/ping', function () {
     return response()->json([
