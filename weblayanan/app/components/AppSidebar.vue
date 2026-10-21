@@ -114,7 +114,7 @@ const data = {
 
     <SidebarContent>
       <!-- Auto-imported components dari app/components/ -->
-      <NavMain :items="data.navMain" />
+      <Navmain :items="data.navMain" />
       <NavDocuments :items="data.documents" />
       <NavSecondary :items="data.navSecondary" class="mt-auto" />
     </SidebarContent>

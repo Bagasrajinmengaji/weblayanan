@@ -20,7 +20,16 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      include: ["@vue/devtools-core"],
+      include: [
+        "@tabler/icons-vue",
+        "@tanstack/vue-table",
+        "@vue/devtools-core",
+        "@vueuse/core",
+        "class-variance-authority",
+        "cn",
+        "reka-ui",
+        "zod",
+      ],
     },
   },
 });
