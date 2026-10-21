@@ -651,7 +651,7 @@ async function confirmAndSubmit() {
 
     <!-- Modal Ringkasan Data (Review Dialog) Sebelum Submit -->
     <Dialog :open="isReviewDialogOpen" @update:open="isReviewDialogOpen = $event">
-      <DialogContent class="sm:max-w-[520px]">
+      <DialogContent class="sm:max-w-130">
         <DialogHeader>
           <DialogTitle class="text-lg font-bold flex items-center gap-2">
             <IconFileCheck class="size-5 text-primary" />

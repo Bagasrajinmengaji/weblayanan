@@ -105,27 +105,24 @@ async function refreshAll() {
 
     <!-- Error State -->
     <div v-if="errorLayanan" class="px-4 lg:px-6">
-      <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-destructive flex items-start gap-3">
-        <IconAlertCircle class="size-5 shrink-0 mt-0.5" />
-        <div class="flex-1">
-          <h3 class="font-semibold text-base">Gagal memuat data layanan akademik</h3>
-          <p class="text-sm text-muted-foreground mt-1">
-            Terjadi kendala saat mengambil daftar layanan dari server backend. Pastikan server API backend aktif di <code class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">http://localhost:8000</code>.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            class="mt-3 border-destructive/40 text-destructive hover:bg-destructive/10"
-            @click="refreshAll"
-            :disabled="isRefreshing"
-          >
-            <IconRefresh
-              class="size-4 mr-1.5"
-              :class="{ 'animate-spin': isRefreshing }"
-            />
-            {{ isRefreshing ? 'Mencoba...' : 'Coba Lagi' }}
-          </Button>
+      <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <IconAlertCircle class="size-5 shrink-0" />
+          <p class="text-sm font-medium">Gagal memuat layanan akademik.</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          class="border-destructive/40 text-destructive hover:bg-destructive/10 h-8 text-xs shrink-0 self-start sm:self-auto"
+          @click="refreshAll"
+          :disabled="isRefreshing"
+        >
+          <IconRefresh
+            class="size-3.5 mr-1.5"
+            :class="{ 'animate-spin': isRefreshing }"
+          />
+          {{ isRefreshing ? 'Mencoba...' : 'Coba Lagi' }}
+        </Button>
       </div>
     </div>
 
