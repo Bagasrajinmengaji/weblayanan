@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // Admin Account
         User::updateOrCreate(
-            ['email' => 'admin@student.ac.id'],
+            ['email' => 'admin@umpku.ac.id'],
             [
                 'name' => 'Administrator BAAK',
                 'role' => 'admin',
